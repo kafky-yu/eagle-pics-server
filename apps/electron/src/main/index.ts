@@ -38,17 +38,24 @@ RLogger.info(
 
 async function initWatchLibrary() {
   const caller = router.createCaller({});
-  const res = await caller.library.findUnique();
+  const libraries = await caller.library.findMany();
   const config = await caller.config.findUnique();
-  if (!res) return;
+  
+  // 如果没有活动的库，设置第一个库为活动库
+  const activeLibrary = libraries.find(lib => lib.isActive);
+  if (!activeLibrary && libraries.length > 0) {
+    await caller.library.setActive({ path: libraries[0].path });
+  }
 
-  const { path } = res;
-  if (res.type === "eagle") {
-    await caller.library.watch({
-      path,
-      isReload: true,
-      isStartDiffLibrary: config?.startDiffLibrary ?? false,
-    });
+  // 监视所有 Eagle 类型的库
+  for (const lib of libraries) {
+    if (lib.type === "eagle") {
+      await caller.library.watch({
+        path: lib.path,
+        isReload: true,
+        isStartDiffLibrary: config?.startDiffLibrary ?? false,
+      });
+    }
   }
 }
 
@@ -65,13 +72,23 @@ const mainWindowReadyToShow = async () => {
 
   await startServer();
   await initWatchLibrary();
+
+  // 设置 IPC 通信
+  // createCustomIPCHandle({
+  //   "library:switch": async (event, path: string) => {
+  //     const caller = router.createCaller({});
+  //     await caller.library.setActive({ path });
+  //     await initWatchLibrary(); // 重新初始化库监视
+  //     return { success: true };
+  //   },
+  // });
 };
 
 async function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 768,
-    height: 450,
+    height: 520,
     show: false,
     autoHideMenuBar: true,
     resizable: false,

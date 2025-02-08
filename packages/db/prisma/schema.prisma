@@ -33,6 +33,8 @@ model Config {
   startDiffLibrary Boolean @default(false)
   // 自动同步
   autoSync         Boolean @default(false)
+  // 当前活动的库路径
+  activeLibraryPath String?
 }
 
 model Library {
@@ -46,6 +48,8 @@ model Library {
   updatedTime  DateTime  @updatedAt
   // 最后同步时间
   lastSyncTime DateTime?
+  // 是否为当前活动的库
+  isActive     Boolean   @default(false)
 }
 
 // 等待同步的文件

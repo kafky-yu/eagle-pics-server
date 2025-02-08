@@ -1,11 +1,12 @@
 interface ContentProps {
   title: React.ReactNode;
   children?: React.ReactNode;
+  className?: string;
 }
 
-const Content = ({ title, children }: ContentProps) => {
+const Content = ({ title, children, className }: ContentProps) => {
   return (
-    <div className="relative flex flex-1 flex-col bg-base-200/70">
+    <div className={`relative flex flex-1 flex-col bg-base-200/70 ${className ?? ''}`}>
       {/* title */}
       {title}
 

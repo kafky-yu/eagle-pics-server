@@ -5,11 +5,14 @@ export interface SettingType {
   orderBy: {
     mtime?: "asc" | "desc";
     modificationTime?: "asc" | "desc";
+    name?: "asc" | "desc";
   };
   openFolderIds: string[];
   count: number;
   trashCount: number;
   shuffle?: boolean;
+  currentLibrary?: string;
+  showFileName?: boolean;
 }
 
 export const defaultSetting: SettingType = {
@@ -21,6 +24,7 @@ export const defaultSetting: SettingType = {
   count: 0,
   trashCount: 0,
   shuffle: false,
+  showFileName: false,
 };
 
 const settingAtom = atom({

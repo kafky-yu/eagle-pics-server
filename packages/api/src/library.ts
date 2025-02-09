@@ -6,7 +6,7 @@ import { debounce } from "lodash";
 import { z } from "zod";
 
 import type { PendingTypeEnum } from "@rao-pics/constant";
-import type { Prisma } from "@rao-pics/db";
+import type { Library, Prisma } from "@rao-pics/db";
 import { prisma } from "@rao-pics/db";
 
 import { router } from "..";
@@ -28,7 +28,7 @@ export const libraryInput = {
 export const libraryCore = {
   findUnique: async () => {
     const library = await prisma.library.findFirst({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     if (!library) return null;
@@ -36,19 +36,19 @@ export const libraryCore = {
     const [pendingCount, syncCount, trashCount, unSyncCount] =
       await prisma.$transaction([
         prisma.pending.count({
-          where: { path: { startsWith: library.path } }
+          where: { path: { startsWith: library.path } },
         }),
         prisma.image.count({
-          where: { path: { startsWith: library.path } }
+          where: { path: { startsWith: library.path } },
         }),
         prisma.image.count({
           where: {
             isDeleted: true,
-            path: { startsWith: library.path }
-          }
+            path: { startsWith: library.path },
+          },
         }),
         prisma.log.count({
-          where: { path: { startsWith: library.path } }
+          where: { path: { startsWith: library.path } },
         }),
       ]);
 
@@ -67,7 +67,7 @@ export const libraryCore = {
     return await prisma.library.findMany();
   },
 
-  setActive: async ({ path }: { path: string }) => {
+  setActive: async ({ path }: { path: string }): Promise<Library | null> => {
     // 停止当前的文件监视
     if (watcher) {
       watcher.unwatch("*");
@@ -76,7 +76,7 @@ export const libraryCore = {
 
     // 获取当前活动库
     const currentLibrary = await prisma.library.findFirst({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     // 清理之前库的状态
@@ -84,29 +84,29 @@ export const libraryCore = {
       // 只清理当前库的日志和待同步状态
       await prisma.$transaction([
         prisma.log.deleteMany({
-          where: { path: { startsWith: currentLibrary.path } }
+          where: { path: { startsWith: currentLibrary.path } },
         }),
         prisma.pending.deleteMany({
-          where: { path: { startsWith: currentLibrary.path } }
-        })
+          where: { path: { startsWith: currentLibrary.path } },
+        }),
       ]);
     }
 
     // 将所有库设置为非活动
     await prisma.library.updateMany({
-      data: { isActive: false }
+      data: { isActive: false },
     });
 
     // 设置指定库为活动
     const library = await prisma.library.update({
       where: { path },
-      data: { isActive: true }
+      data: { isActive: true },
     });
 
     // 更新 config 中的活动库路径
     await prisma.config.update({
       where: { name: "config" },
-      data: { activeLibraryPath: path }
+      data: { activeLibraryPath: path },
     });
 
     // 重新启动客户端服务，触发新库的扫描
@@ -138,7 +138,7 @@ export const libraryCore = {
 
     // 只更新当前活动的库
     const library = await prisma.library.findFirst({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     if (!library) {
@@ -151,10 +151,13 @@ export const libraryCore = {
     });
   },
 
-  deleteActive: async () => {
+  deleteActive: async (): Promise<{
+    success: boolean;
+    nextLibrary: Library | null;
+  }> => {
     // 获取当前活动库
     const library = await prisma.library.findFirst({
-      where: { isActive: true }
+      where: { isActive: true },
     });
 
     if (!library) {
@@ -171,55 +174,59 @@ export const libraryCore = {
     await prisma.$transaction([
       // 删除库记录
       prisma.library.delete({
-        where: { path: library.path }
+        where: { path: library.path },
       }),
       // 删除相关的日志和待同步状态
       prisma.log.deleteMany({
-        where: { path: { startsWith: library.path } }
+        where: { path: { startsWith: library.path } },
       }),
       prisma.pending.deleteMany({
-        where: { path: { startsWith: library.path } }
+        where: { path: { startsWith: library.path } },
       }),
       prisma.image.deleteMany({
-        where: { path: { startsWith: library.path } }
+        where: { path: { startsWith: library.path } },
       }),
       // 删除相关的标签、文件夹和颜色
       prisma.tag.deleteMany(),
       prisma.folder.deleteMany(),
-      prisma.color.deleteMany()
+      prisma.color.deleteMany(),
     ]);
 
     // 查找剩余的库，按创建时间排序
     const remainingLibrary = await prisma.library.findFirst({
-      orderBy: { createdTime: 'asc' }
+      orderBy: { createdTime: "asc" },
     });
 
-    let nextLibrary = null;
-    
+    let nextLibrary: Library | null = null;
+
     if (remainingLibrary) {
       // 如果还有库，使用 setActive 来切换
-      nextLibrary = await libraryCore.setActive({ path: remainingLibrary.path });
+      nextLibrary = await libraryCore.setActive({
+        path: remainingLibrary.path,
+      });
     } else {
       // 如果没有库了，清除 config 中的活动库路径
       await prisma.config.update({
         where: { name: "config" },
-        data: { activeLibraryPath: null }
+        data: { activeLibraryPath: null },
       });
       // 重启服务
       await restartClientServer();
     }
 
-    return { 
+    return {
       success: true,
-      nextLibrary
+      nextLibrary,
     };
-  }
+  },
 };
 
 export const library = t.router({
   findUnique: t.procedure.query(libraryCore.findUnique),
   findMany: t.procedure.query(libraryCore.findMany),
-  setActive: t.procedure.input(z.object({ path: z.string() })).mutation(({ input }) => libraryCore.setActive(input)),
+  setActive: t.procedure
+    .input(z.object({ path: z.string() }))
+    .mutation(({ input }) => libraryCore.setActive(input)),
   delete: t.procedure.mutation(() => libraryCore.deleteActive()),
 
   add: t.procedure.input(z.string()).mutation(async ({ input }) => {
@@ -229,7 +236,7 @@ export const library = t.router({
 
     // 检查库是否已存在
     const existingLib = await prisma.library.findUnique({
-      where: { path: input }
+      where: { path: input },
     });
 
     if (existingLib) {
@@ -247,11 +254,11 @@ export const library = t.router({
       // 将所有库设置为非活动
       prisma.library.updateMany({
         where: { isActive: true },
-        data: { isActive: false }
+        data: { isActive: false },
       }),
       // 清理之前的日志和待同步状态
       prisma.log.deleteMany(),
-      prisma.pending.deleteMany()
+      prisma.pending.deleteMany(),
     ]);
 
     // 创建新库，并设置为活动状态
@@ -266,7 +273,7 @@ export const library = t.router({
     // 更新 config 中的活动库路径
     await prisma.config.update({
       where: { name: "config" },
-      data: { activeLibraryPath: input }
+      data: { activeLibraryPath: input },
     });
 
     // 重启服务，触发新库的扫描
@@ -275,7 +282,7 @@ export const library = t.router({
     // 主动触发一次扫描
     const caller = router.createCaller({});
     await caller.library.watch({ path: input });
-    
+
     // 等待扫描完成
     await new Promise<void>((resolve) => {
       const onWatch = (data: { status: string }) => {
@@ -343,7 +350,7 @@ export const library = t.router({
       chokidar
         .watch(join(libraryPath, "metadata.json"))
         .on("change", (path) => {
-          void syncFolder(path);
+          void syncFolder(path, libraryPath);
         });
 
       watcher = chokidar.watch(
@@ -362,7 +369,12 @@ export const library = t.router({
             if (type === "create" || type === "update") {
               const needSync = await checkedImage(path);
               if (!needSync) {
-                ee.emit("watch", { status: "ok", data: { path, type }, count, message: "文件已同步" });
+                ee.emit("watch", {
+                  status: "ok",
+                  data: { path, type },
+                  count,
+                  message: "文件已同步",
+                });
                 continue;
               }
             }

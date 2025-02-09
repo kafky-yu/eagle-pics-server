@@ -2,6 +2,9 @@
 
 import { useMemo, useRef } from "react";
 import Image from "next/legacy/image";
+import { useRecoilValue } from "recoil";
+
+import { settingSelector } from "~/states/setting";
 import justifyLayout from "justified-layout";
 import {
   MasonryScroller,
@@ -44,6 +47,7 @@ function Responsive({ children, images, onLoadMore }: Props) {
   const limit = 50;
   const containerRef = useRef(null);
   const [windowWidth, windowHeight] = useWindowSize();
+  const setting = useRecoilValue(settingSelector);
 
   const { offset, width } = useContainerPosition(containerRef, [
     windowWidth,
@@ -152,6 +156,11 @@ function Responsive({ children, images, onLoadMore }: Props) {
                         lightbox.loadAndOpen(curIndex ?? 0, images ?? []);
                       }}
                     >
+                      {setting.showFileName && (
+                        <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 p-2 text-xs text-white">
+                          {image.src.split("/").pop()}
+                        </div>
+                      )}
                       <Image src={image.thumbnailPath} layout="fill" />
                     </a>
                   )

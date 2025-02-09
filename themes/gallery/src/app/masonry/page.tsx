@@ -26,8 +26,8 @@ function Home() {
   const m = search.get("m");
 
   const imageQuery = useCallback(
-    () => getImageQuery(m, setting.orderBy, setting.shuffle),
-    [setting.orderBy, m, setting.shuffle],
+    () => getImageQuery(m, setting.orderBy, setting.shuffle, setting.currentLibrary),
+    [setting.orderBy, m, setting.shuffle, setting.currentLibrary],
   )();
 
   const pages = imageQuery.data?.pages;
@@ -38,12 +38,17 @@ function Home() {
 
     const result = pages?.map((page) => {
       return page.data.map((image) => {
-        const id = image.path.split(/\/|\\/).slice(-2)[0];
+
+      const pathParts = image.path.split(/\/|\\/);
+      const libraryName = pathParts[pathParts.length - 4]?.replace(".library", "");
+      const imageId = pathParts[pathParts.length - 2];
+
+
         const host = `http://${config.ip}:${config.clientPort}`;
-        const src = `${host}/static/${id}/${image.name}.${image.ext}`;
+        const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
         const thumbnailPath = image.noThumbnail
           ? src
-          : `${host}/static/${id}/${image.name}_thumbnail.png`;
+          : `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
 
         return {
           id: image.id,

@@ -61,12 +61,15 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
           );
         }
 
-        const id = image.path.split(/\/|\\/).slice(-2)[0];
+        const pathParts = image.path.split(/\/|\\/);
+        const libraryName = pathParts[pathParts.length - 4]?.replace(".library", "");
+        const imageId = pathParts[pathParts.length - 2];
+
         const host = `http://${config.ip}:${config.clientPort}`;
-        const src = `${host}/static/${id}/${image.name}.${image.ext}`;
+        const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
         const thumbnailPath = image.noThumbnail
           ? src
-          : `${host}/static/${id}/${image.name}_thumbnail.png`;
+          : `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
 
         return (
           <Card key={child.id}>

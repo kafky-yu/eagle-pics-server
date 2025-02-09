@@ -40,10 +40,10 @@ async function initWatchLibrary() {
   const caller = router.createCaller({});
   const libraries = await caller.library.findMany();
   const config = await caller.config.findUnique();
-  
+
   // 如果没有活动的库，设置第一个库为活动库
-  const activeLibrary = libraries.find(lib => lib.isActive);
-  if (!activeLibrary && libraries.length > 0) {
+  const activeLibrary = libraries.find((lib) => lib.isActive);
+  if (!activeLibrary && libraries.length > 0 && libraries[0]?.path) {
     await caller.library.setActive({ path: libraries[0].path });
   }
 

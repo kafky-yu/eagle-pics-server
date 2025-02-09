@@ -43,15 +43,22 @@ export const startClientServer = async () => {
     redirect: true,
   });
 
-  const libray = await routerCore.library.findUnique();
+  const libraries = await routerCore.library.findMany();
+  console.log(libraries);
 
-  if (!libray) return;
+  if (!libraries.length) return;
 
-  await server.register(fastifyStatic, {
-    root: path.join(libray.path, "images"),
-    prefix: "/static/",
-    decorateReply: false,
-  });
+  // 注册每个储存库的静态文件路由
+  for (const lib of libraries) {
+    const lib_name = lib?.path?.split(/\/|\\/).pop()?.replace(".library", "");
+    if (!lib_name) continue;
+
+    await server.register(fastifyStatic, {
+      root: path.join(lib.path),
+      prefix: `/static/${lib_name}/`,
+      decorateReply: false,
+    });
+  }
 
   server.setNotFoundHandler((_req, reply) => {
     return reply.sendFile("404.html");

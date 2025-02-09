@@ -175,21 +175,46 @@ export const folder = t.router({
     .input(folderInput.setPwdFolderShow)
     .mutation(async ({ input }) => folderCore.setPwdFolderShow(input)),
 
-  findTree: t.procedure.query(async () => {
-    const folders = await prisma.folder.findMany({
-      where: { show: true },
-      orderBy: { id: "desc" },
-      select: {
-        id: true,
-        pid: true,
-        name: true,
-        description: true,
-        _count: { select: { images: true } },
-      },
-    });
+  findTree: t.procedure
+    .input(
+      z.object({
+        libraryPath: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const folders = await prisma.folder.findMany({
+        where: {
+          show: true,
+          images: {
+            some: {
+              path: {
+                startsWith: input.libraryPath,
+              },
+            },
+          },
+        },
+        orderBy: { id: "desc" },
+        select: {
+          id: true,
+          pid: true,
+          name: true,
+          description: true,
+          _count: {
+            select: {
+              images: {
+                where: {
+                  path: {
+                    startsWith: input.libraryPath,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
 
-    return flatToTree<(typeof folders)[number]>(folders);
-  }),
+      return flatToTree<(typeof folders)[number]>(folders);
+    }),
 
   findWithPwd: t.procedure.query(async () => {
     return await prisma.folder.findMany({

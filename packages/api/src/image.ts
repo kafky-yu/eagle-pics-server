@@ -12,6 +12,7 @@ export const imageInput = {
     limit: z.number().min(1).max(100).optional(),
     cursor: z.string().nullish(),
     includes: z.enum(["tags", "colors", "folders"]).array().optional(),
+    libraryPath: z.string(),
     orderBy: z
       .object({
         modificationTime: z.enum(["asc", "desc"]).optional(),
@@ -300,6 +301,8 @@ export const image = t.router({
         folders: {
           every: { show: true },
         },
+        // 只返回当前储存库的图片
+        path: { startsWith: input?.libraryPath },
       };
 
       const images = await prisma.image.findMany({
@@ -346,6 +349,9 @@ export const image = t.router({
             id,
           },
         },
+        path: {
+          startsWith: input.libraryPath,
+        },
       };
 
       const images = await prisma.image.findMany({
@@ -379,6 +385,24 @@ export const image = t.router({
   /**
    * 回收站中的素材
    */
+  count: t.procedure
+    .input(
+      z.object({
+        libraryPath: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const count = await prisma.image.count({
+        where: {
+          isDeleted: false,
+          path: {
+            startsWith: input.libraryPath,
+          },
+        },
+      });
+      return count;
+    }),
+
   findTrash: t.procedure
     .input(imageInput.find.optional())
     .query(async ({ input }) => {

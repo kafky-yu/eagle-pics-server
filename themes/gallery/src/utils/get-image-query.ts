@@ -11,6 +11,7 @@ export const getImageQuery = (
   m: string | null,
   orderBy: SettingType["orderBy"],
   random?: boolean,
+  libraryPath?: string,
 ) => {
   const limit = 50;
 
@@ -27,14 +28,14 @@ export const getImageQuery = (
     if (!find) {
       if (random) {
         find = trpc.image.findShuffle.useInfiniteQuery(
-          { limit, includes: ["colors"], orderBy },
+          { limit, includes: ["colors"], orderBy, libraryPath: libraryPath || '' },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
           },
         );
       } else {
         find = trpc.image.find.useInfiniteQuery(
-          { limit, includes: ["colors"], orderBy },
+          { limit, includes: ["colors"], orderBy, libraryPath: libraryPath || '' },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
           },
@@ -60,7 +61,7 @@ export const getImageQuery = (
 
   if (!findByFolderId) {
     findByFolderId = trpc.image.findByFolderId.useInfiniteQuery(
-      { limit, includes: ["colors"], orderBy, id: m },
+      { limit, includes: ["colors"], orderBy, id: m, libraryPath: libraryPath || '' },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
       },

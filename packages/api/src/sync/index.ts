@@ -54,7 +54,7 @@ export const sync = t.router({
       const pendings = (await routerCore.pending.get()) as Pending[];
 
       // 同步文件夹
-      await syncFolder(join(input.libraryPath, "metadata.json"));
+      await syncFolder(join(input.libraryPath, "metadata.json"), input.libraryPath);
 
       await syncImage(pendings);
 
@@ -86,7 +86,7 @@ export const sync = t.router({
   }),
 });
 
-export const syncFolder = async (path: string) => {
+export const syncFolder = async (path: string, libraryPath: string) => {
   try {
     const folders = handleFolder(path);
 
@@ -100,20 +100,41 @@ export const syncFolder = async (path: string) => {
     const config = await configCore.findUnique();
     await folderCore.setPwdFolderShow(config?.pwdFolder ?? false);
 
-    // 对比 folders 与 db 中的 folders，删除旧的
-    const oldFolders = await folderCore.find();
+    //对比 folders 与 db 中的 folders，删除旧的
+    // 只获取当前储存库的文件夹
+    const oldFolders = await prisma.folder.findMany({
+      where: {
+        images: {
+          some: {
+            path: {
+              startsWith: libraryPath
+            }
+          }
+        }
+      }
+    });
+
     if (Array.isArray(oldFolders)) {
       const diff = diffFolder(
         folders.map((item) => item.id),
         oldFolders.map((item) => item.id),
       );
 
+      // 删除时确保只删除当前储存库的文件夹
       prisma.folder
         .deleteMany({
           where: {
             id: {
               in: diff.disconnect,
             },
+            // 确保文件夹属于当前储存库
+            images: {
+              some: {
+                path: {
+                  startsWith: libraryPath
+                }
+              }
+            }
           },
         })
         .catch((e) => {

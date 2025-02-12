@@ -27,21 +27,25 @@ const Setting = () => {
 
   const search = useSearchParams();
 
-  const { data: libraries } = trpc.library.findMany.useQuery();
-  const { data: count } = trpc.image.count.useQuery(
-    { libraryPath: setting.currentLibrary ?? "" },
-    { enabled: !!setting.currentLibrary },
-  );
+  const { data: libraries } = trpc.eagle.getLibraryList.useQuery();
+  const { data: library } = trpc.eagle.getLibraryInfo.useQuery();
+
+  const switchLibrary = trpc.eagle.switchLibrary.useMutation();
+
+  // const { data: count } = trpc.image.count.useQuery(
+  //   { libraryPath: setting.currentLibrary ?? "" },
+  //   { enabled: !!setting.currentLibrary },
+  // );
 
   // 更新图片计数
-  React.useEffect(() => {
-    if (typeof count === "number") {
-      setSetting((prev) => ({
-        ...prev,
-        count,
-      }));
-    }
-  }, [count, setSetting]);
+  // React.useEffect(() => {
+  //   if (typeof count === "number") {
+  //     setSetting((prev) => ({
+  //       ...prev,
+  //       count,
+  //     }));
+  //   }
+  // }, [count, setSetting]);
   const { data: config } = trpc.config.findUnique.useQuery();
 
   React.useEffect(() => {
@@ -56,10 +60,7 @@ const Setting = () => {
       }
     }
   }, [libraries, setSetting]);
-  const { data: folderTree } = trpc.folder.findTree.useQuery(
-    { libraryPath: setting.currentLibrary ?? "" },
-    { enabled: !!setting.currentLibrary },
-  );
+  const { data: folderTree } = trpc.eagle.getFolders.useQuery();
 
   const handleLayoutChange = (layout: SettingType["layout"]) => {
     setSetting((prev) => ({
@@ -109,25 +110,72 @@ const Setting = () => {
                 {libraries?.map((lib) => (
                   <div
                     key={lib.path}
+                    role="button"
+                    tabIndex={0}
                     className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-base-200 ${
                       setting.currentLibrary === lib.path ? "bg-base-200" : ""
                     }`}
-                    onClick={() => {
-                      setSetting((prev) => ({
-                        ...prev,
-                        currentLibrary: lib.path,
-                      }));
-
-                      // 刷新图片相关查询
-                      utils.image.findByFolderId.invalidate();
-                      utils.image.find.invalidate();
-                      utils.image.findShuffle.invalidate();
-                      utils.image.count.invalidate();
-                      // 刷新文件夹相关查询
-                      utils.folder.findTree.invalidate();
-
-                      // 跳转到对应布局页面
+                    onClick={async () => {
                       router.push(`/${setting.layout}`);
+
+                      if (setting.currentLibrary === lib.path) return;
+
+                      await switchLibrary.mutateAsync({
+                        libraryPath: lib.path,
+                      });
+
+                      const checkLibrarySwitch = async () => {
+                        await utils.eagle.getLibraryInfo.refetch();
+
+                        while (
+                          setting.currentLibrary === library?.library.path
+                        ) {
+                          await new Promise((resolve) =>
+                            setTimeout(resolve, 500),
+                          );
+
+                          await utils.eagle.getLibraryInfo.refetch(); // 每次循环都重新获取
+                          await utils.eagle.getLibraryList.refetch();
+                          await utils.eagle.getFolders.refetch();
+                          await utils.eagle.getItems.invalidate();
+                          await utils.eagle.getItemsByFolderId.invalidate();
+
+                          if (setting.currentLibrary === library?.library.path)
+                            break;
+                        }
+                      };
+
+                      await checkLibrarySwitch();
+                    }}
+                    onKeyDown={async () => {
+                      router.push(`/${setting.layout}`);
+
+                      if (setting.currentLibrary === lib.path) return;
+
+                      await switchLibrary.mutateAsync({
+                        libraryPath: lib.path,
+                      });
+
+                      const checkLibrarySwitch = async () => {
+                        await utils.eagle.getLibraryInfo.refetch();
+
+                        while (
+                          setting.currentLibrary === library?.library.path
+                        ) {
+                          await new Promise((resolve) =>
+                            setTimeout(resolve, 500),
+                          );
+
+                          await utils.eagle.getLibraryInfo.refetch(); // 每次循环都重新获取
+                          await utils.eagle.getLibraryList.refetch();
+                          await utils.eagle.getFolders.refetch();
+
+                          if (setting.currentLibrary === library?.library.path)
+                            break;
+                        }
+                      };
+
+                      await checkLibrarySwitch();
                     }}
                   >
                     <div className="flex-1 overflow-hidden">

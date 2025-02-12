@@ -2,9 +2,6 @@
 
 import { useMemo, useRef } from "react";
 import Image from "next/legacy/image";
-import { useRecoilValue } from "recoil";
-
-import { settingSelector } from "~/states/setting";
 import justifyLayout from "justified-layout";
 import {
   MasonryScroller,
@@ -13,10 +10,12 @@ import {
   usePositioner,
 } from "masonic";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { useRecoilValue } from "recoil";
 
 import { VIDEO_EXT } from "@rao-pics/constant";
 import type { EXT } from "@rao-pics/constant";
 
+import { settingSelector } from "~/states/setting";
 import initLightboxVideoPlugin from "~/utils/photoswipe-video";
 
 import "photoswipe/style.css";
@@ -27,7 +26,7 @@ type JustifyLayoutResult = ReturnType<typeof justifyLayout>;
 
 interface Props {
   images?: {
-    id: number;
+    id: string;
     src: string;
     thumbnailPath: string;
     bgColor: string;

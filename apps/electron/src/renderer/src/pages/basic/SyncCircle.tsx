@@ -30,51 +30,51 @@ export function SyncCircle({
   }>();
 
   // 监听资源库变化
-  trpc.library.onWatch.useSubscription(undefined, {
-    onData: (data) => {
-      onReadData?.(data.status);
+  // trpc.library.onWatch.useSubscription(undefined, {
+  //   onData: (data) => {
+  //     onReadData?.(data.status);
 
-      if (data.status === "completed") {
-        setTimeout(() => {
-          void utils.library.invalidate();
-          setData(undefined);
-        }, 100);
+  //     if (data.status === "completed") {
+  //       setTimeout(() => {
+  //         void utils.library.invalidate();
+  //         setData(undefined);
+  //       }, 100);
 
-        return;
-      } else if (data.status === "error") {
-        console.error(data);
-      }
+  //       return;
+  //     } else if (data.status === "error") {
+  //       console.error(data);
+  //     }
 
-      setData({
-        status: data.status,
-        count: data.count,
-        type: "reading",
-      });
-    },
-  });
+  //     setData({
+  //       status: data.status,
+  //       count: data.count,
+  //       type: "reading",
+  //     });
+  //   },
+  // });
 
   // 监听同步变化
-  trpc.sync.onStart.useSubscription(undefined, {
-    onData: (data) => {
-      onSyncData?.(data.status);
-      if (data.status === "completed") {
-        setTimeout(() => {
-          void utils.library.invalidate();
-          setData(undefined);
-        }, 500);
+  // trpc.sync.onStart.useSubscription(undefined, {
+  //   onData: (data) => {
+  //     onSyncData?.(data.status);
+  //     if (data.status === "completed") {
+  //       setTimeout(() => {
+  //         void utils.library.invalidate();
+  //         setData(undefined);
+  //       }, 500);
 
-        return;
-      } else if (data.status === "error") {
-        console.error(data);
-      }
+  //       return;
+  //     } else if (data.status === "error") {
+  //       console.error(data);
+  //     }
 
-      setData({
-        status: data.status,
-        count: data.count,
-        type: data.type,
-      });
-    },
-  });
+  //     setData({
+  //       status: data.status,
+  //       count: data.count,
+  //       type: data.type,
+  //     });
+  //   },
+  // });
 
   const Description = () => {
     let text = "待同步数";

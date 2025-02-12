@@ -1,5 +1,7 @@
 import { color } from "./src/color";
 import { config, configCore } from "./src/config";
+import { eagle } from "./src/eagle_api/router";
+import { eagleService } from "./src/eagle_api/service";
 import { folder, folderCore } from "./src/folder";
 import { image, imageCore } from "./src/image";
 import { library, libraryCore } from "./src/library";
@@ -19,6 +21,7 @@ export const router = t.router({
   tag,
   color,
   log,
+  eagle,
 });
 
 export const routerCore = {
@@ -28,6 +31,7 @@ export const routerCore = {
   library: libraryCore,
   pending: pendingCore,
   log: logCore,
+  eagle: eagleService,
 };
 
 export type AppRouter = typeof router;

@@ -7,12 +7,8 @@ import { settingSelector } from "~/states/setting";
 interface Folder {
   name: string;
   id: string;
-  pid: string | null;
   description: string | null;
   children?: Folder[];
-  _count: {
-    images: number;
-  };
 }
 
 interface FileTreeProps {
@@ -20,16 +16,16 @@ interface FileTreeProps {
 }
 
 // 递归计算文件夹总数
-function countFolder(data: Folder[]): number {
-  let count = 0;
-  data.forEach((item) => {
-    count += item._count.images;
-    if (item.children?.length) {
-      count += countFolder(item.children);
-    }
-  });
-  return count;
-}
+// function countFolder(data: Folder[]): number {
+//   const count = 0;
+//   // data.forEach((item) => {
+//   //   count += item._count.images;
+//   //   if (item.children?.length) {
+//   //     count += countFolder(item.children);
+//   //   }
+//   // });
+//   return count;
+// }
 
 function FolderTree({ data }: FileTreeProps) {
   const [setting, setSetting] = useRecoilState(settingSelector);
@@ -60,9 +56,7 @@ function FolderTree({ data }: FileTreeProps) {
             {data.name}
           </span>
 
-          <span className="text-sm font-normal text-base-content/30">
-            {data._count.images || null}
-          </span>
+          <span className="text-sm font-normal text-base-content/30">{0}</span>
         </div>
       </li>
     );
@@ -70,8 +64,8 @@ function FolderTree({ data }: FileTreeProps) {
 
   // 父级文件夹
   const FolderRoot = ({ data }: { data: Folder }) => {
-    const childCount = countFolder(data.children ?? []);
-    const allCount = data._count.images + (childCount ?? 0);
+    // const childCount = countFolder(data.children ?? []);
+    // const allCount = data._count.images + (childCount ?? 0);
 
     const open = openFolderIds?.includes(data.id);
 
@@ -110,9 +104,7 @@ function FolderTree({ data }: FileTreeProps) {
 
               {data.name}
             </div>
-            <span className="text-sm text-base-content/30">
-              {open ? data._count.images || null : allCount || null}
-            </span>
+            <span className="text-sm text-base-content/30">{open}</span>
           </summary>
           <ul>
             {data.children?.map((item) => {

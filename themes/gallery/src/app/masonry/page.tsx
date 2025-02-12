@@ -15,7 +15,7 @@ import { useRecoilValue } from "recoil";
 
 import { settingSelector } from "~/states/setting";
 import { getImageQuery } from "~/utils/get-image-query";
-import ChildFolderCardList from "../_components/ChildFolderCardList";
+// import ChildFolderCardList from "../_components/ChildFolderCardList";
 import Masonry from "../_components/Masonry";
 
 function Home() {
@@ -26,23 +26,24 @@ function Home() {
   const m = search.get("m");
 
   const imageQuery = useCallback(
-    () => getImageQuery(m, setting.orderBy, setting.shuffle, setting.currentLibrary),
-    [setting.orderBy, m, setting.shuffle, setting.currentLibrary],
+    () => getImageQuery(m, setting.orderBy, setting.shuffle),
+    [setting.orderBy, m, setting.shuffle],
   )();
 
   const pages = imageQuery.data?.pages;
-  const count = imageQuery.data?.pages[0]?.count;
+  // const count = imageQuery.data?.pages[0]?.count;
 
   const images = useMemo(() => {
     if (!config) return [];
 
     const result = pages?.map((page) => {
       return page.data.map((image) => {
-
-      const pathParts = image.path.split(/\/|\\/);
-      const libraryName = pathParts[pathParts.length - 4]?.replace(".library", "");
-      const imageId = pathParts[pathParts.length - 2];
-
+        const pathParts = image.path.split(/\/|\\/);
+        const libraryName = pathParts[pathParts.length - 4]?.replace(
+          ".library",
+          "",
+        );
+        const imageId = pathParts[pathParts.length - 2];
 
         const host = `http://${config.ip}:${config.clientPort}`;
         const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
@@ -64,7 +65,36 @@ function Home() {
       });
     });
 
-    return result?.flat();
+    const flatResult = result?.flat() ?? [];
+
+    // 前端排序
+    return [...flatResult].sort((a, b) => {
+      // 按名称排序
+      if (setting.orderBy.name) {
+        const aName = a.src.split("/").pop() ?? "";
+        const bName = b.src.split("/").pop() ?? "";
+        return setting.orderBy.name === "asc"
+          ? aName.localeCompare(bName)
+          : bName.localeCompare(aName);
+      }
+
+      // 按修改时间排序
+      if (setting.orderBy.modificationTime) {
+        const aTime =
+          pages
+            ?.find((p) => p.data.some((img) => img.id === a.id))
+            ?.data.find((img) => img.id === a.id)?.modificationTime ?? 0;
+        const bTime =
+          pages
+            ?.find((p) => p.data.some((img) => img.id === b.id))
+            ?.data.find((img) => img.id === b.id)?.modificationTime ?? 0;
+        return setting.orderBy.modificationTime === "asc"
+          ? aTime - bTime
+          : bTime - aTime;
+      }
+
+      return 0;
+    });
   }, [config, pages]);
 
   const onLoadMore = async () => {
@@ -73,17 +103,17 @@ function Home() {
     }
   };
 
-  const ChildFolder = useCallback(() => {
-    if (!m) return null;
-    if (m === "trash") return null;
-    if (count) return null;
+  // const ChildFolder = useCallback(() => {
+  //   if (!m) return null;
+  //   if (m === "trash") return null;
+  //   if (count) return null;
 
-    return <ChildFolderCardList folderId={m} />;
-  }, [count, m]);
+  //   return <ChildFolderCardList folderId={m} />;
+  // }, [count, m]);
 
   return (
     <Masonry images={images} onLoadMore={onLoadMore}>
-      <ChildFolder />
+      {/* <ChildFolder /> */}
     </Masonry>
   );
 }

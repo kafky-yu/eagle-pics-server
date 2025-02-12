@@ -14,12 +14,13 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
 
   const { layout } = setting;
 
-  const { data: folder } = trpc.folder.findUnique.useQuery({
+  const { data: folder } = trpc.eagle.getFolderInfo.useQuery({
     id: folderId,
-    include: ["children"],
+    // include: ["children"],
   });
 
   const { data: config } = trpc.config.findUnique.useQuery();
+  console.log(folder);
 
   const children = folder?.children ?? [];
 
@@ -62,14 +63,15 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
         }
 
         const pathParts = image.path.split(/\/|\\/);
-        const libraryName = pathParts[pathParts.length - 4]?.replace(".library", "");
+        const libraryName = pathParts[pathParts.length - 4]?.replace(
+          ".library",
+          "",
+        );
         const imageId = pathParts[pathParts.length - 2];
 
         const host = `http://${config.ip}:${config.clientPort}`;
         const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
-        const thumbnailPath = image.noThumbnail
-          ? src
-          : `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
+        const thumbnailPath = `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
 
         return (
           <Card key={child.id}>

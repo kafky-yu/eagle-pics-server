@@ -43,8 +43,8 @@ export const startClientServer = async () => {
     redirect: true,
   });
 
-  const libraries = await routerCore.library.findMany();
-  console.log(libraries);
+  const libraries: { path: string; isActive: boolean }[] =
+    await routerCore.eagle.getLibraryList();
 
   if (!libraries.length) return;
 

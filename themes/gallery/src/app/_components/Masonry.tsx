@@ -2,9 +2,6 @@
 
 import { useRef } from "react";
 import Image from "next/legacy/image";
-import { useRecoilValue } from "recoil";
-
-import { settingSelector } from "~/states/setting";
 import {
   MasonryScroller,
   useContainerPosition,
@@ -12,9 +9,11 @@ import {
   usePositioner,
 } from "masonic";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { useRecoilValue } from "recoil";
 
 import type { EXT } from "@rao-pics/constant";
 
+import { settingSelector } from "~/states/setting";
 import initLightboxVideoPlugin from "~/utils/photoswipe-video";
 
 import "photoswipe/style.css";
@@ -23,7 +22,7 @@ import { useWindowSize } from "~/hooks/useWindowSize";
 
 interface Props {
   images?: {
-    id: number;
+    id: string;
     src: string;
     thumbnailPath: string;
     bgColor: string;

@@ -11,31 +11,37 @@ export const getImageQuery = (
   m: string | null,
   orderBy: SettingType["orderBy"],
   random?: boolean,
-  libraryPath?: string,
 ) => {
   const limit = 50;
 
-  let find: ReturnType<typeof trpc.image.find.useInfiniteQuery> | undefined;
+  let find: ReturnType<typeof trpc.eagle.getItems.useInfiniteQuery> | undefined;
   let findTrash:
-    | ReturnType<typeof trpc.image.findTrash.useInfiniteQuery>
-    | ReturnType<typeof trpc.image.findShuffle.useInfiniteQuery>
+    | ReturnType<typeof trpc.eagle.getItemShuffle.useInfiniteQuery>
     | undefined;
   let findByFolderId:
-    | ReturnType<typeof trpc.image.findByFolderId.useInfiniteQuery>
+    | ReturnType<typeof trpc.eagle.getItemsByFolderId.useInfiniteQuery>
     | undefined;
 
   if (!m) {
     if (!find) {
       if (random) {
-        find = trpc.image.findShuffle.useInfiniteQuery(
-          { limit, includes: ["colors"], orderBy, libraryPath: libraryPath || '' },
+        find = trpc.eagle.getItemShuffle.useInfiniteQuery(
+          {
+            limit,
+            includes: ["colors"],
+            orderBy,
+          },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
           },
         );
       } else {
-        find = trpc.image.find.useInfiniteQuery(
-          { limit, includes: ["colors"], orderBy, libraryPath: libraryPath || '' },
+        find = trpc.eagle.getItems.useInfiniteQuery(
+          {
+            limit,
+            includes: ["colors"],
+            orderBy,
+          },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
           },
@@ -46,22 +52,27 @@ export const getImageQuery = (
     return find;
   }
 
-  if (m === "trash") {
-    if (!findTrash) {
-      findTrash = trpc.image.findTrash.useInfiniteQuery(
-        { limit, includes: ["colors"], orderBy },
-        {
-          getNextPageParam: (lastPage) => lastPage.nextCursor,
-        },
-      );
-    }
+  // if (m === "trash") {
+  //   if (!findTrash) {
+  //     findTrash = trpc.image.findTrash.useInfiniteQuery(
+  //       { limit, includes: ["colors"], orderBy },
+  //       {
+  //         getNextPageParam: (lastPage) => lastPage.nextCursor,
+  //       },
+  //     );
+  //   }
 
-    return findTrash;
-  }
+  //   return findTrash;
+  // }
 
   if (!findByFolderId) {
-    findByFolderId = trpc.image.findByFolderId.useInfiniteQuery(
-      { limit, includes: ["colors"], orderBy, id: m, libraryPath: libraryPath || '' },
+    findByFolderId = trpc.eagle.getItemsByFolderId.useInfiniteQuery(
+      {
+        limit,
+        includes: ["colors"],
+        orderBy,
+        id: m,
+      },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
       },

@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 export interface EagleFolder {
   id: string;
   name: string;
@@ -69,4 +67,5 @@ export interface ApiResponse<T> {
   status: "success" | "error";
   data: T;
   message?: string;
+  errorCode?: number;
 }

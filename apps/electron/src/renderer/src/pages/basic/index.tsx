@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ClockIcon,
   EyeIcon,
@@ -12,15 +12,6 @@ import { QRCodeSVG } from "qrcode.react";
 
 import { trpc } from "@rao-pics/trpc";
 
-const BtnStatus = {
-  1: { disabled: true, text: "无需同步", allowDeleted: true },
-  2: { disabled: false, text: "同步", allowDeleted: true },
-  3: { disabled: true, text: "同步中...", allowDeleted: false },
-  4: { disabled: true, text: "读取中...", allowDeleted: false },
-  5: { disabled: true, text: "已开启自动同步", allowDeleted: true },
-  6: { disabled: true, text: "初始化中...", allowDeleted: false },
-};
-
 const BasicPage = () => {
   const utils = trpc.useUtils();
 
@@ -28,7 +19,7 @@ const BasicPage = () => {
   const { data: library } = trpc.eagle.getLibraryInfo.useQuery();
   const { data: libraries } = trpc.eagle.getLibraryList.useQuery();
 
-  const switchLibrary = trpc.library.setActive.useMutation({
+  const switchLibrary = trpc.eagle.switchLibrary.useMutation({
     onError: (err) => {
       console.error("切换资源库失败:", err);
       window.dialog.showErrorBox("切换资源库失败", err.message);
@@ -36,23 +27,12 @@ const BasicPage = () => {
     onSuccess: async () => {
       // 刷新所有相关查询
       await Promise.all([
-        utils.library.findUnique.invalidate(),
-        utils.library.findMany.invalidate(),
+        utils.eagle.getLibraryInfo.invalidate(),
+        utils.eagle.getLibraryList.invalidate(),
         utils.config.findUnique.invalidate(),
       ]);
     },
   });
-
-  const [btnState, setBtnState] = useState<keyof typeof BtnStatus>(6);
-  const btn = BtnStatus[btnState];
-
-  useEffect(() => {
-    if (config?.autoSync) {
-      return setBtnState(5);
-    }
-
-    setBtnState(library ? 2 : 1);
-  }, [library, config]);
 
   const site = useMemo(() => {
     if (config) {
@@ -76,7 +56,6 @@ const BasicPage = () => {
           <div className="text-sm text-base-content/60">
             已添加 {libraries?.length ?? 0} 个资源库
           </div>
-          <button className="btn btn-primary btn-sm">添加资源库</button>
         </div>
         <div className="card-wrapper">
           <Row
@@ -126,7 +105,7 @@ const BasicPage = () => {
                                 document.activeElement as HTMLElement;
                               dropdown?.blur();
                               await switchLibrary.mutateAsync({
-                                path: lib.path,
+                                libraryPath: lib.path,
                               });
                             }
                           }}
@@ -227,23 +206,6 @@ const BasicPage = () => {
               void window.shell.openExternal(site);
             }}
           />
-        </div>
-
-        <div className="mt-4 flex py-3">
-          <div className="flex w-1/2 justify-center"></div>
-          <div className="w-1/2">
-            <div className="m-auto flex h-full w-5/6 flex-col justify-center">
-              <button className="btn btn-neutral" disabled={btn.disabled}>
-                {btn.text}
-              </button>
-              <button
-                disabled={!btn.allowDeleted}
-                className="btn btn-outline btn-error mt-4"
-              >
-                移除
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </Content>

@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react";
 
 import { VIDEO_EXT } from "@rao-pics/constant";
 import type { EXT } from "@rao-pics/constant";
-import { numberToHex } from "@rao-pics/utils";
 
 import { trpc } from "~/utils/trpc";
 
@@ -55,7 +54,9 @@ function Page() {
           id: image.id,
           src,
           thumbnailPath,
-          bgColor: numberToHex(image.colors?.[0]?.rgb ?? 0),
+          bgColor: image.palettes?.[0]
+            ? `rgb(${image.palettes[0].color.join(", ")})`
+            : "rgb(255, 255, 255)",
           width: image.width,
           height: image.height,
           ext: image.ext as unknown as typeof EXT,
@@ -95,7 +96,7 @@ function Page() {
 
       return 0;
     });
-  }, [config, pages]);
+  }, [config, pages, setting.orderBy.modificationTime, setting.orderBy.name]);
 
   const onLoadMore = async () => {
     if (imageQuery.hasNextPage) {

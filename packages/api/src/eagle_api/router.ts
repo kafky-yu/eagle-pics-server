@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { t } from "../utils";
 import { eagleService } from "./service";
-import type { SearchParams } from "./types";
+import type { EagleItem, SearchParams } from "./types";
 
 export const imageInput = {
   find: z.object({
@@ -60,10 +60,9 @@ export const eagle = t.router({
         orderBy: convertOrderBy(orderBy),
       };
 
-      // console.log("request", search_params);
       const images = await eagleService.getItems(search_params);
 
-      const result = [];
+      const result: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
       for (const image of images) {
         const image_path = await eagleService.getOriginalImage(image.id);
         const thumbnail_path = await eagleService.getThumbnail(image.id);
@@ -91,8 +90,6 @@ export const eagle = t.router({
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const { folders } = await eagleService.getLibraryInfo();
-      console.log("input", input);
-      console.log("folders", folders);
 
       return folders.find((folder) => folder.id === input.id);
     }),
@@ -111,7 +108,6 @@ export const eagle = t.router({
     .query(({ input }) => eagleService.getOriginalImage(input)),
 
   // 获取指定文件夹的图片
-  //todo
 
   getItemsByFolderId: t.procedure
     .input(imageInput.find.merge(z.object({ id: z.string() })))
@@ -130,7 +126,7 @@ export const eagle = t.router({
 
       const images = await eagleService.getItems(search_params);
 
-      const result = [];
+      const result: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
       for (const image of images) {
         const image_path = await eagleService.getOriginalImage(image.id);
         const thumbnail_path = await eagleService.getThumbnail(image.id);
@@ -170,7 +166,7 @@ export const eagle = t.router({
       };
       const images = await eagleService.getItems(search_params);
 
-      const result = [];
+      const result: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
       for (const image of images) {
         const image_path = await eagleService.getOriginalImage(image.id);
         const thumbnail_path = await eagleService.getThumbnail(image.id);

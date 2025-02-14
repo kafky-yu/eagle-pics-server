@@ -1,6 +1,7 @@
 import * as qs from "qs";
 
 import type {
+  ApiResponse,
   EagleFolder,
   EagleItem,
   EagleLibraryInfo,
@@ -9,12 +10,12 @@ import type {
 
 export class EagleService {
   private readonly baseUrl: string;
-  private readonly apiToken?: string;
+  // private readonly apiToken?: string;
 
   constructor() {
     const port = process.env.EAGLE_API_PORT ?? "41595";
     this.baseUrl = `http://localhost:${port}/api`;
-    this.apiToken = process.env.EAGLE_API_TOKEN;
+    // this.apiToken = process.env.EAGLE_API_TOKEN;
   }
 
   private async request<T>(
@@ -22,11 +23,18 @@ export class EagleService {
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    // console.log("request", url, options);
 
-    const response = await fetch(url, options).then((res) => res.json());
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    return response.data;
+    const result = (await response.json()) as ApiResponse<T>;
+    if (result.status === "error") {
+      throw new Error(result.message ?? `API error! code: ${result.errorCode}`);
+    }
+
+    return result.data;
   }
 
   //获取当前图库的信息
@@ -38,14 +46,12 @@ export class EagleService {
   async getLibraryList(): Promise<{ path: string; isActive: boolean }[]> {
     const path_list = await this.request<string[]>("/library/history");
     const active_library_path = await this.getLibraryInfo();
-    const result = [];
-    for (const lib of path_list) {
-      result.push({
+    return path_list
+      .filter((lib) => !lib.endsWith("/"))
+      .map((lib) => ({
         path: lib,
         isActive: lib === active_library_path.library.path,
-      });
-    }
-    return result;
+      }));
   }
 
   // 切换图库
@@ -80,11 +86,9 @@ export class EagleService {
 
   // 获取缩略图URL
   async getThumbnail(id: string): Promise<string> {
-    const response = await this.request<{ url: string }>(
-      `/item/thumbnail?id=${id}`,
-    );
+    const response = await this.request<string>(`/item/thumbnail?id=${id}`);
 
-    return response.url;
+    return response;
   }
 
   // 获取原始图片URL

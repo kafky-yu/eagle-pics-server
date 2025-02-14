@@ -5,7 +5,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import * as Sentry from "@sentry/electron";
 import ip from "ip";
 
-import { closeServer, router, routerCore, startServer } from "@rao-pics/api";
+import { closeServer, routerCore, startServer } from "@rao-pics/api";
 import { IS_DEV, PLATFORM } from "@rao-pics/constant/server";
 import { createDbPath, migrate, prisma } from "@rao-pics/db";
 import { RLogger } from "@rao-pics/rlog";
@@ -36,29 +36,6 @@ RLogger.info(
   "main",
 );
 
-async function initWatchLibrary() {
-  const caller = router.createCaller({});
-  const libraries = await caller.library.findMany();
-  const config = await caller.config.findUnique();
-
-  // 如果没有活动的库，设置第一个库为活动库
-  const activeLibrary = libraries.find((lib) => lib.isActive);
-  if (!activeLibrary && libraries.length > 0 && libraries[0]?.path) {
-    await caller.library.setActive({ path: libraries[0].path });
-  }
-
-  // 监视所有 Eagle 类型的库
-  for (const lib of libraries) {
-    if (lib.type === "eagle") {
-      await caller.library.watch({
-        path: lib.path,
-        isReload: true,
-        isStartDiffLibrary: config?.startDiffLibrary ?? false,
-      });
-    }
-  }
-}
-
 const mainWindowReadyToShow = async () => {
   // 初始化 config
   const config = await routerCore.config.upsert({
@@ -71,24 +48,13 @@ const mainWindowReadyToShow = async () => {
   );
 
   await startServer();
-  await initWatchLibrary();
-
-  // 设置 IPC 通信
-  // createCustomIPCHandle({
-  //   "library:switch": async (event, path: string) => {
-  //     const caller = router.createCaller({});
-  //     await caller.library.setActive({ path });
-  //     await initWatchLibrary(); // 重新初始化库监视
-  //     return { success: true };
-  //   },
-  // });
 };
 
 async function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 768,
-    height: 520,
+    height: 450,
     show: false,
     autoHideMenuBar: true,
     resizable: false,

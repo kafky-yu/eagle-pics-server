@@ -11,8 +11,8 @@ const Layout = () => {
   const [current, setCurrent] = useState(0);
   const { color } = useColor();
 
-  const { data: library } = trpc.library.findUnique.useQuery();
-  const libraryName = library?.path.split(/\/|\\/).slice(-1)[0] ?? "暂无资源库";
+  const { data: library } = trpc.eagle.getLibraryInfo.useQuery();
+  const libraryName = library?.library.name ?? "暂无资源库";
 
   return (
     <div

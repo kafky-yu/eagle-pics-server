@@ -3,10 +3,10 @@ import Menu from "@renderer/components/Menu";
 interface LayoutAsideProps {
   current: number;
   setCurrent: (e: number) => void;
-  libraryName: string;
+  libraryName?: string;
 }
 
-function LayoutAside({ current, setCurrent, libraryName }: LayoutAsideProps) {
+function LayoutAside({ current, setCurrent }: LayoutAsideProps) {
   const windows = window.electron.process.platform === "win32";
 
   return (
@@ -18,15 +18,6 @@ function LayoutAside({ current, setCurrent, libraryName }: LayoutAsideProps) {
             style={{ appRegion: "drag" } as React.CSSProperties}
           />
         )}
-
-        <p
-          className={`mx-4 border-b border-base-content/10 pb-2 text-base font-medium capitalize ${
-            windows ? "h-12 pt-4" : "h-8"
-          }`}
-          style={windows ? ({ appRegion: "drag" } as React.CSSProperties) : {}}
-        >
-          {libraryName}
-        </p>
       </div>
 
       <div className="scroll-y flex-1 bg-base-200">

@@ -1,6 +1,4 @@
 import {
-  ArrowPathIcon,
-  ArrowsRightLeftIcon,
   DevicePhoneMobileIcon,
   FolderMinusIcon,
   LinkIcon,
@@ -74,54 +72,6 @@ const SettingPage = () => {
               >
                 <option value={0}>不显示</option>
                 <option value={1}>显示</option>
-              </select>
-            }
-          />
-        </div>
-
-        {/* 同步相关 */}
-        <div className="card-wrapper mt-4">
-          <Row
-            left={
-              <>
-                <ArrowsRightLeftIcon className="h-5 w-5" />
-                <span className="ml-2">启动时对比资源库</span>
-              </>
-            }
-            right={
-              <select
-                className="custom-select w-auto"
-                value={config?.startDiffLibrary ? 1 : 0}
-                onChange={(e) => {
-                  configUpsert.mutate({
-                    startDiffLibrary: Number(e.target.value) === 1,
-                  });
-                }}
-              >
-                <option value={0}>关闭</option>
-                <option value={1}>打开</option>
-              </select>
-            }
-          />
-          <Row
-            left={
-              <>
-                <ArrowPathIcon className="h-5 w-5" />
-                <span className="ml-2">自动同步</span>
-              </>
-            }
-            right={
-              <select
-                className="custom-select w-auto"
-                value={config?.autoSync ? 1 : 0}
-                onChange={(e) => {
-                  configUpsert.mutate({
-                    autoSync: Number(e.target.value) === 1,
-                  });
-                }}
-              >
-                <option value={0}>关闭</option>
-                <option value={1}>打开</option>
               </select>
             }
           />

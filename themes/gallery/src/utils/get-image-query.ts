@@ -12,12 +12,9 @@ export const getImageQuery = (
   orderBy: SettingType["orderBy"],
   random?: boolean,
 ) => {
-  const limit = 50;
+  const limit = 100;
 
   let find: ReturnType<typeof trpc.eagle.getItems.useInfiniteQuery> | undefined;
-  let findTrash:
-    | ReturnType<typeof trpc.eagle.getItemShuffle.useInfiniteQuery>
-    | undefined;
   let findByFolderId:
     | ReturnType<typeof trpc.eagle.getItemsByFolderId.useInfiniteQuery>
     | undefined;
@@ -51,19 +48,6 @@ export const getImageQuery = (
 
     return find;
   }
-
-  // if (m === "trash") {
-  //   if (!findTrash) {
-  //     findTrash = trpc.image.findTrash.useInfiniteQuery(
-  //       { limit, includes: ["colors"], orderBy },
-  //       {
-  //         getNextPageParam: (lastPage) => lastPage.nextCursor,
-  //       },
-  //     );
-  //   }
-
-  //   return findTrash;
-  // }
 
   if (!findByFolderId) {
     findByFolderId = trpc.eagle.getItemsByFolderId.useInfiniteQuery(

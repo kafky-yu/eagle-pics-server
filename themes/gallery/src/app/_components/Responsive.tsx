@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import Image from "next/legacy/image";
 import justifyLayout from "justified-layout";
 import {
@@ -42,8 +42,15 @@ interface Props {
   children?: React.ReactNode;
 }
 
+const ImageSkeleton = () => (
+  <div
+    className="animate-pulse rounded-box bg-gray-200 shadow"
+    style={{ height: "240px" }}
+  />
+);
+
 function Responsive({ children, images, onLoadMore }: Props) {
-  const limit = 50;
+  const limit = 30; // 减少每页加载数量以提高性能
   const containerRef = useRef(null);
   const [windowWidth, windowHeight] = useWindowSize();
   const setting = useRecoilValue(settingSelector);
@@ -92,8 +99,15 @@ function Responsive({ children, images, onLoadMore }: Props) {
 
   const onRender = useInfiniteLoader(onLoadMore, {
     minimumBatchSize: limit,
-    threshold: 3,
+    threshold: 4, // 增加预加载的视口数量
   });
+
+  // 初始加载时如果内容不足一页，自动加载更多
+  useEffect(() => {
+    if (images && images.length < limit) {
+      onLoadMore();
+    }
+  }, [images, onLoadMore]);
 
   const lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
     pswpModule: () => import("photoswipe"),
@@ -105,14 +119,23 @@ function Responsive({ children, images, onLoadMore }: Props) {
 
   return (
     <main className="p-2 md:p-3" id="photo-swipe-lightbox">
-      <MasonryScroller
-        onRender={onRender}
-        positioner={positioner}
-        offset={offset}
-        height={windowHeight}
-        containerRef={containerRef}
-        items={items?.justify ?? []}
-        render={({ data, index }) => {
+      {!images || images.length === 0 ? (
+        <div className="grid grid-cols-2 gap-3 p-3 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <ImageSkeleton key={index} />
+          ))}
+          {children}
+        </div>
+      ) : (
+        <>
+          <MasonryScroller
+            onRender={onRender}
+            positioner={positioner}
+            offset={offset}
+            height={windowHeight}
+            containerRef={containerRef}
+            items={items?.justify ?? []}
+            render={({ data, index }) => {
           const itemImages = items?.images[index];
           return (
             <div
@@ -168,9 +191,10 @@ function Responsive({ children, images, onLoadMore }: Props) {
             </div>
           );
         }}
-      />
-
-      {children}
+          />
+          {children}
+        </>
+      )}
     </main>
   );
 }

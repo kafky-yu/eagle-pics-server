@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/legacy/image";
 import justifyLayout from "justified-layout";
 import {
@@ -111,23 +111,107 @@ function Responsive({ children, images, onLoadMore, loadAll = false }: Props) {
 
     // 如果是 loadAll 模式，则一直加载直到没有更多图片
     if (loadAll) {
-      console.log('加载所有图片模式');
+      console.log("加载所有图片模式");
       onLoadMore();
     }
     // 如果不是 loadAll 模式，只在内容不足一页时加载
     else if (images.length < limit) {
-      console.log('内容不足一页，加载更多');
+      console.log("内容不足一页，加载更多");
       onLoadMore();
     }
   }, [images, onLoadMore, loadAll, limit]);
 
-  const lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
-    pswpModule: () => import("photoswipe"),
-    loop: false,
-  });
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(
+    null,
+  );
+  const autoPlayIntervalRef = useRef<NodeJS.Timeout>();
+  const lightboxRef = useRef<PhotoSwipeLightbox>();
 
-  initLightboxVideoPlugin(lightbox);
-  lightbox.init();
+  // 初始化 lightbox
+  useEffect(() => {
+    const lightbox = new PhotoSwipeLightbox({
+      pswpModule: () => import("photoswipe"),
+      loop: false,
+    });
+
+    initLightboxVideoPlugin(lightbox);
+    lightbox.init();
+
+    // 监听 lightbox 关闭事件
+    lightbox.on("close", () => {
+      setIsAutoPlaying(false);
+      setCurrentImageIndex(null);
+    });
+
+    lightboxRef.current = lightbox;
+
+    return () => {
+      lightbox.destroy();
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // 处理自动播放
+  useEffect(() => {
+    if (!images || !lightboxRef.current) return;
+
+    if (isAutoPlaying) {
+      autoPlayIntervalRef.current = setInterval(() => {
+        lightboxRef.current?.pswp?.next();
+      }, 5000);
+    } else if (autoPlayIntervalRef.current) {
+      clearInterval(autoPlayIntervalRef.current);
+    }
+
+    return () => {
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current);
+      }
+    };
+  }, [isAutoPlaying, images]);
+
+  // 创建一个自动播放按钮并添加到 PhotoSwipe 的根元素中
+  useEffect(() => {
+    // 等待 PhotoSwipe 初始化完成
+    setTimeout(() => {
+      const pswpElement = document.querySelector(".pswp");
+      if (!pswpElement) return;
+
+      // 创建按钮容器
+      let buttonContainer = pswpElement.querySelector(".auto-play-button");
+      if (!buttonContainer) {
+        buttonContainer = document.createElement("div");
+        buttonContainer.className =
+          "auto-play-button absolute top-4 left-[10%] z-[9999]";
+        pswpElement.appendChild(buttonContainer);
+      }
+
+      // 更新按钮内容
+      buttonContainer.innerHTML = `
+        <button
+          class="rounded-full p-2 transition-colors bg-black/30 hover:bg-black/50 text-white"
+          style="backdrop-filter: blur(8px);"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            ${
+              isAutoPlaying
+                ? '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />' // 暂停图标
+                : '<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347c-.75.412-1.667-.13-1.667-.986V5.653Z" />' // 播放图标
+            }
+          </svg>
+        </button>
+      `;
+
+      // 添加点击事件
+      const button = buttonContainer.querySelector("button");
+      if (button) {
+        button.onclick = () => setIsAutoPlaying(!isAutoPlaying);
+      }
+    }, 100);
+  }, [currentImageIndex, isAutoPlaying]);
 
   return (
     <main className="p-2 md:p-3" id="photo-swipe-lightbox">
@@ -148,61 +232,65 @@ function Responsive({ children, images, onLoadMore, loadAll = false }: Props) {
             containerRef={containerRef}
             items={items?.justify ?? []}
             render={({ data, index }) => {
-          const itemImages = items?.images[index];
-          return (
-            <div
-              style={{
-                height: data.containerHeight + "px",
-                position: "relative",
-              }}
-            >
-              {data.boxes.map((box, i) => {
-                const image = itemImages?.[i];
+              const itemImages = items?.images[index];
+              return (
+                <div
+                  style={{
+                    height: data.containerHeight + "px",
+                    position: "relative",
+                  }}
+                >
+                  {data.boxes.map((box, i) => {
+                    const image = itemImages?.[i];
 
-                return (
-                  image && (
-                    <a
-                      href={image.src}
-                      key={image.id}
-                      data-pswp-width={image.width}
-                      data-pswp-height={image.height}
-                      data-pswp-type={
-                        VIDEO_EXT.includes(image.ext) ? "video" : "image"
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      className="relative block overflow-hidden rounded-box shadow"
-                      style={{
-                        width: `${box.width}px`,
-                        height: `${box.height}px`,
-                        position: "absolute",
-                        top: `${box.top}px`,
-                        left: `${box.left}px`,
-                        backgroundColor: image.bgColor + "0C",
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
+                    return (
+                      image && (
+                        <a
+                          href={image.src}
+                          key={image.id}
+                          data-pswp-width={image.width}
+                          data-pswp-height={image.height}
+                          data-pswp-type={
+                            VIDEO_EXT.includes(image.ext) ? "video" : "image"
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="relative block overflow-hidden rounded-box shadow"
+                          style={{
+                            width: `${box.width}px`,
+                            height: `${box.height}px`,
+                            position: "absolute",
+                            top: `${box.top}px`,
+                            left: `${box.left}px`,
+                            backgroundColor: image.bgColor + "0C",
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
 
-                        const curIndex = images?.findIndex(
-                          (item) => item.id === image.id,
-                        );
+                            const curIndex = images?.findIndex(
+                              (item) => item.id === image.id,
+                            );
 
-                        lightbox.loadAndOpen(curIndex ?? 0, images ?? []);
-                      }}
-                    >
-                      {setting.showFileName && (
-                        <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 p-2 text-xs text-white">
-                          {image.src.split("/").pop()}
-                        </div>
-                      )}
-                      <Image src={image.thumbnailPath} layout="fill" />
-                    </a>
-                  )
-                );
-              })}
-            </div>
-          );
-        }}
+                            setCurrentImageIndex(curIndex ?? 0);
+                            lightboxRef.current?.loadAndOpen(
+                              curIndex ?? 0,
+                              images ?? [],
+                            );
+                          }}
+                        >
+                          {setting.showFileName && (
+                            <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 p-2 text-xs text-white">
+                              {image.src.split("/").pop()}
+                            </div>
+                          )}
+                          <Image src={image.thumbnailPath} layout="fill" />
+                        </a>
+                      )
+                    );
+                  })}
+                </div>
+              );
+            }}
           />
           {children}
         </>

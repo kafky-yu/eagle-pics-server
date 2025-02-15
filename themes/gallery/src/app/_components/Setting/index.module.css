@@ -5,3 +5,7 @@
 .rowTitle {
   @apply flex items-center;
 }
+
+.drawerOverlay {
+  @apply fixed inset-0 h-[200vh] bg-black/50;
+}

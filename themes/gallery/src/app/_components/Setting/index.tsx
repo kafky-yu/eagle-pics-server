@@ -10,6 +10,8 @@ import {
   ServerIcon,
   TrashIcon,
   WalletIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { useRecoilState } from "recoil";
 
@@ -23,6 +25,7 @@ import styles from "./index.module.css";
 const Setting = () => {
   const router = useRouter();
   const [setting, setSetting] = useRecoilState(settingSelector);
+  const [isLibraryListOpen, setIsLibraryListOpen] = React.useState(true);
   const utils = trpc.useUtils();
 
   const search = useSearchParams();
@@ -97,16 +100,24 @@ const Setting = () => {
           <label
             htmlFor="my-drawer"
             aria-label="close sidebar"
-            className="drawer-overlay"
+            className={`${styles.drawerOverlay}`}
           ></label>
           <div className="min-h-full w-80 bg-base-100 p-4 md:w-96">
             {/* 储存库列表 */}
             <div className="mb-4 rounded-box border border-base-content/10 bg-base-200/30 px-4 py-3">
-              <div className="mb-2 flex items-center gap-2">
+              <div 
+                className="mb-2 flex cursor-pointer items-center gap-2"
+                onClick={() => setIsLibraryListOpen(!isLibraryListOpen)}
+              >
                 <ServerIcon className="h-5 w-5 text-primary" />
-                <div className="text-sm font-medium">储存库列表</div>
+                <div className="flex-1 text-sm font-medium">储存库列表</div>
+                {isLibraryListOpen ? (
+                  <ChevronDownIcon className="h-4 w-4 text-base-content/50" />
+                ) : (
+                  <ChevronRightIcon className="h-4 w-4 text-base-content/50" />
+                )}
               </div>
-              <div className="space-y-2">
+              <div className={`space-y-2 ${isLibraryListOpen ? '' : 'hidden'}`}>
                 {libraries?.map((lib) => (
                   <div
                     key={lib.path}

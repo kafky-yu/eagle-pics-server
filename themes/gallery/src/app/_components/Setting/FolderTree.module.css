@@ -1,0 +1,3 @@
+.folderMenu :where(li > details > summary):after {
+  display: none;
+}

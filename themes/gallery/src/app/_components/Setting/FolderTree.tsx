@@ -1,8 +1,14 @@
 import { useRouter, useSearchParams } from "next/navigation";
-import { FolderMinusIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  FolderMinusIcon,
+  FolderOpenIcon,
+} from "@heroicons/react/24/outline";
 import { useRecoilState } from "recoil";
 
 import { settingSelector } from "~/states/setting";
+import styles from "./FolderTree.module.css";
 
 interface Folder {
   name: string;
@@ -38,9 +44,11 @@ function FolderTree({ data }: FileTreeProps) {
 
   const Document = ({ data }: { data: Folder }) => {
     return (
-      <li className="flex justify-between">
+      <li className="w-full">
         <div
-          className="flex justify-between"
+          className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-2 py-1 hover:bg-base-200 ${
+            folderId === data.id ? "bg-base-200" : ""
+          }`}
           aria-hidden="true"
           onClick={(e) => {
             e.stopPropagation();
@@ -49,14 +57,17 @@ function FolderTree({ data }: FileTreeProps) {
             }
             void router.push(`/${layout}?m=${data.id}`);
           }}
+          title={data.name}
         >
-          <span className="flex items-center">
-            {<FolderMinusIcon className="mr-1 h-5 w-5" />}
-
-            {data.name}
+          <span className="flex items-center gap-1 overflow-hidden">
+            <div className="h-4 w-4 flex-shrink-0" />
+            <FolderMinusIcon className="h-5 w-5 flex-shrink-0" />
+            <span className="truncate">{data.name}</span>
           </span>
 
-          <span className="text-sm font-normal text-base-content/30">{0}</span>
+          <span className="ml-2 flex-shrink-0 text-sm font-normal text-base-content/30">
+            {0}
+          </span>
         </div>
       </li>
     );
@@ -70,7 +81,7 @@ function FolderTree({ data }: FileTreeProps) {
     const open = openFolderIds?.includes(data.id);
 
     return (
-      <li>
+      <li className="w-full">
         <details
           open={open}
           aria-hidden="true"
@@ -84,9 +95,11 @@ function FolderTree({ data }: FileTreeProps) {
             }));
           }}
         >
-          <summary className="relative flex">
+          <summary className="relative flex cursor-pointer items-center rounded-lg px-2 py-1 hover:bg-base-200">
             <div
-              className="absolute left-0 top-0 z-50 h-full w-10/12"
+              className={`absolute left-0 top-0 z-50 h-full w-full ${
+                folderId === data.id ? "rounded-lg bg-base-200" : ""
+              }`}
               aria-hidden
               onClick={(e) => {
                 e.stopPropagation();
@@ -99,12 +112,15 @@ function FolderTree({ data }: FileTreeProps) {
                 void router.push(`/${layout}?m=${data.id}`);
               }}
             />
-            <div className="flex flex-1 items-center">
-              {<FolderOpenIcon className="mr-1 h-5 w-5" />}
-
-              {data.name}
+            <div className="z-[51] flex flex-1 items-center gap-1 overflow-hidden">
+              {open ? (
+                <ChevronDownIcon className="h-4 w-4 flex-shrink-0 text-base-content/50" />
+              ) : (
+                <ChevronRightIcon className="h-4 w-4 flex-shrink-0 text-base-content/50" />
+              )}
+              <FolderOpenIcon className="h-5 w-5 flex-shrink-0" />
+              <span className="truncate">{data.name}</span>
             </div>
-            <span className="text-sm text-base-content/30">{open}</span>
           </summary>
           <ul>
             {data.children?.map((item) => {
@@ -121,8 +137,10 @@ function FolderTree({ data }: FileTreeProps) {
   };
 
   return (
-    <>
-      <ul className="menu w-full font-mono text-base">
+    <div className="w-full overflow-hidden">
+      <ul
+        className={`menu w-full space-y-1 font-mono text-base ${styles.folderMenu}`}
+      >
         {data.map((item) => {
           if (!item.children?.length) {
             return <Document key={item.id} data={item} />;
@@ -131,7 +149,7 @@ function FolderTree({ data }: FileTreeProps) {
           }
         })}
       </ul>
-    </>
+    </div>
   );
 }
 

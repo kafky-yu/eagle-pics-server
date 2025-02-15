@@ -79,8 +79,8 @@ const Setting = () => {
     setSetting((prev) => ({
       ...prev,
       orderBy: value.startsWith("name_")
-        ? { name: value.replace("name_", "") as "asc" | "desc" }
-        : { modificationTime: value as "asc" | "desc" },
+        ? { name: value.replace("name_", "") as "asc" | "desc", clientSort: true }
+        : { modificationTime: value as "asc" | "desc", clientSort: true },
     }));
   };
 

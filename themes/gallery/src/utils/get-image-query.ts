@@ -26,7 +26,8 @@ export const getImageQuery = (
           {
             limit,
             includes: ["colors"],
-            orderBy,
+            // 如果是前端排序，则不传递排序参数
+            ...(!orderBy.clientSort ? { orderBy } : {}),
           },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -37,7 +38,8 @@ export const getImageQuery = (
           {
             limit,
             includes: ["colors"],
-            orderBy,
+            // 如果是前端排序，则不传递排序参数
+            ...(!orderBy.clientSort ? { orderBy } : {}),
           },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,

@@ -39,6 +39,9 @@ interface Props {
 
   onLoadMore: () => void;
 
+  // 是否直接加载所有图片，如果为 true，则会一直加载直到没有更多图片
+  loadAll?: boolean;
+
   children?: React.ReactNode;
 }
 
@@ -49,7 +52,7 @@ const ImageSkeleton = () => (
   />
 );
 
-function Responsive({ children, images, onLoadMore }: Props) {
+function Responsive({ children, images, onLoadMore, loadAll = false }: Props) {
   const limit = 30; // 减少每页加载数量以提高性能
   const containerRef = useRef(null);
   const [windowWidth, windowHeight] = useWindowSize();
@@ -102,12 +105,21 @@ function Responsive({ children, images, onLoadMore }: Props) {
     threshold: 4, // 增加预加载的视口数量
   });
 
-  // 初始加载时如果内容不足一页，自动加载更多
+  // 处理图片加载逻辑
   useEffect(() => {
-    if (images && images.length < limit) {
+    if (!images) return;
+
+    // 如果是 loadAll 模式，则一直加载直到没有更多图片
+    if (loadAll) {
+      console.log('加载所有图片模式');
       onLoadMore();
     }
-  }, [images, onLoadMore]);
+    // 如果不是 loadAll 模式，只在内容不足一页时加载
+    else if (images.length < limit) {
+      console.log('内容不足一页，加载更多');
+      onLoadMore();
+    }
+  }, [images, onLoadMore, loadAll, limit]);
 
   const lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
     pswpModule: () => import("photoswipe"),

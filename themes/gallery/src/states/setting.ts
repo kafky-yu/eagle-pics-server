@@ -6,6 +6,8 @@ export interface SettingType {
     mtime?: "asc" | "desc";
     modificationTime?: "asc" | "desc";
     name?: "asc" | "desc";
+    // 是否使用前端排序，如果为 true，则不会重新请求数据
+    clientSort?: boolean;
   };
   openFolderIds: string[];
   count: number;

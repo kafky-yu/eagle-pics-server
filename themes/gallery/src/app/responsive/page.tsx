@@ -24,9 +24,20 @@ function Page() {
   const search = useSearchParams();
   const m = search.get("m");
 
+  // 使用 useMemo 来控制何时重新请求数据
+  const queryKey = useMemo(
+    () => [
+      m,
+      // 如果是前端排序，则不触发重新请求
+      setting.orderBy.clientSort ? undefined : setting.orderBy,
+      setting.shuffle,
+    ],
+    [m, setting.orderBy, setting.shuffle],
+  );
+
   const imageQuery = useCallback(
     () => getImageQuery(m, setting.orderBy, setting.shuffle),
-    [setting.orderBy, m, setting.shuffle],
+    queryKey,
   )();
 
   const pages = imageQuery.data?.pages;
@@ -113,7 +124,12 @@ function Page() {
   // }, [count, m]);
 
   return (
-    <Responsive onLoadMore={onLoadMore} images={images}>
+    <Responsive
+      onLoadMore={onLoadMore}
+      images={images}
+      // 如果选择了文件夹，则直接加载所有图片
+      loadAll={!!m}
+    >
       {/* <ChildFolder /> */}
     </Responsive>
   );

@@ -6,16 +6,15 @@ import {
   AdjustmentsHorizontalIcon,
   AdjustmentsVerticalIcon,
   ArrowsUpDownIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   DocumentTextIcon,
   ServerIcon,
   TrashIcon,
   WalletIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { useRecoilState } from "recoil";
 
-import { IconShuffle } from "~/icons/Icon-Shuffle";
 import type { SettingType } from "~/states/setting";
 import { settingSelector } from "~/states/setting";
 import { trpc } from "~/utils/trpc";
@@ -25,7 +24,7 @@ import styles from "./index.module.css";
 const Setting = () => {
   const router = useRouter();
   const [setting, setSetting] = useRecoilState(settingSelector);
-  const [isLibraryListOpen, setIsLibraryListOpen] = React.useState(true);
+  const [isLibraryListOpen, setIsLibraryListOpen] = React.useState(false);
   const utils = trpc.useUtils();
 
   const search = useSearchParams();
@@ -79,7 +78,10 @@ const Setting = () => {
     setSetting((prev) => ({
       ...prev,
       orderBy: value.startsWith("name_")
-        ? { name: value.replace("name_", "") as "asc" | "desc", clientSort: true }
+        ? {
+            name: value.replace("name_", "") as "asc" | "desc",
+            clientSort: true,
+          }
         : { modificationTime: value as "asc" | "desc", clientSort: true },
     }));
   };
@@ -105,19 +107,19 @@ const Setting = () => {
           <div className="min-h-full w-80 bg-base-100 p-4 md:w-96">
             {/* 储存库列表 */}
             <div className="mb-4 rounded-box border border-base-content/10 bg-base-200/30 px-4 py-3">
-              <div 
+              <div
                 className="mb-2 flex cursor-pointer items-center gap-2"
                 onClick={() => setIsLibraryListOpen(!isLibraryListOpen)}
               >
                 <ServerIcon className="h-5 w-5 text-primary" />
-                <div className="flex-1 text-sm font-medium">储存库列表</div>
+                <div className="flex-1 text-sm font-medium">资源库列表</div>
                 {isLibraryListOpen ? (
                   <ChevronDownIcon className="h-4 w-4 text-base-content/50" />
                 ) : (
                   <ChevronRightIcon className="h-4 w-4 text-base-content/50" />
                 )}
               </div>
-              <div className={`space-y-2 ${isLibraryListOpen ? '' : 'hidden'}`}>
+              <div className={`space-y-2 ${isLibraryListOpen ? "" : "hidden"}`}>
                 {libraries?.map((lib) => (
                   <div
                     key={lib.path}
@@ -268,27 +270,6 @@ const Setting = () => {
                       {setting.count}
                     </span>
                   </Link>
-                </li>
-                <li>
-                  <div className="flex justify-between active:!bg-transparent active:!text-inherit">
-                    <span className="flex items-center">
-                      <IconShuffle className="mr-1 h-5 w-5" />
-                      随机模式
-                    </span>
-
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={setting.shuffle}
-                      onChange={(e) => {
-                        setSetting((prev) => ({
-                          ...prev,
-                          shuffle: e.target.checked,
-                        }));
-                        router.refresh();
-                      }}
-                    />
-                  </div>
                 </li>
                 <li>
                   <div className="flex justify-between active:!bg-transparent active:!text-inherit">

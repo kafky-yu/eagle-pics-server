@@ -10,7 +10,6 @@ import type { SettingType } from "~/states/setting";
 export const getImageQuery = (
   m: string | null,
   orderBy: SettingType["orderBy"],
-  random?: boolean,
 ) => {
   const limit = 50;
 
@@ -21,39 +20,20 @@ export const getImageQuery = (
 
   if (!m) {
     if (!find) {
-      if (random) {
-        find = trpc.eagle.getItemShuffle.useInfiniteQuery(
-          {
-            limit,
-            includes: ["colors"],
-            // 如果是前端排序，则不传递排序参数
-            orderBy,
-          },
-          {
-            getNextPageParam: (lastPage) => lastPage.nextCursor,
-            // 保持缓存不过期
-            staleTime: Infinity,
-            // 当窗口聚焦时自动重新获取数据
-            refetchOnWindowFocus: true,
-          },
-        );
-      } else {
-        find = trpc.eagle.getItems.useInfiniteQuery(
-          {
-            limit,
-            includes: ["colors"],
-            // 如果是前端排序，则不传递排序参数
-            orderBy,
-          },
-          {
-            getNextPageParam: (lastPage) => lastPage.nextCursor,
-            // 保持缓存不过期
-            staleTime: Infinity,
-            // 当窗口聚焦时自动重新获取数据
-            refetchOnWindowFocus: true,
-          },
-        );
-      }
+      find = trpc.eagle.getItems.useInfiniteQuery(
+        {
+          limit,
+          includes: ["colors"],
+          orderBy,
+        },
+        {
+          getNextPageParam: (lastPage) => lastPage.nextCursor,
+          // 保持缓存不过期
+          staleTime: Infinity,
+          // 当窗口聚焦时自动重新获取数据
+          refetchOnWindowFocus: true,
+        },
+      );
     }
 
     return find;

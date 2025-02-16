@@ -150,43 +150,6 @@ export const eagle = t.router({
         nextCursor,
       };
     }),
-
-  getItemShuffle: t.procedure
-    .input(imageInput.find.optional())
-    .query(async ({ input }) => {
-      const limit = input?.limit ?? 100;
-      const { cursor, includes } = input ?? {};
-
-      const search_params: SearchParams = {
-        limit,
-        offset: cursor ?? 0,
-        folders: includes,
-      };
-      const images = await eagleService.getItems(search_params);
-
-      const result: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
-      for (const image of images) {
-        const image_path = await eagleService.getOriginalImage(image.id);
-        const thumbnail_path = await eagleService.getThumbnail(image.id);
-        const temp = {
-          ...image,
-          path: image_path,
-          noThumbnail: thumbnail_path === image_path ?? true,
-        };
-        result.push(temp);
-      }
-
-      let nextCursor: number | undefined = undefined;
-
-      if (result.length <= limit && result.length > 0) {
-        nextCursor = (cursor ?? 0) + 1;
-      }
-
-      return {
-        data: result,
-        nextCursor,
-      };
-    }),
 });
 
 function convertOrderBy(orderBy?: {

@@ -25,8 +25,8 @@ function Page() {
   const m = search.get("m");
 
   const imageQuery = useCallback(
-    () => getImageQuery(m, setting.orderBy, setting.shuffle),
-    [m, setting.orderBy, setting.shuffle],
+    () => getImageQuery(m, setting.orderBy),
+    [m, setting.orderBy],
   )();
 
   const pages = imageQuery.data?.pages;

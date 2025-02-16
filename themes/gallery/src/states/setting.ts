@@ -12,7 +12,6 @@ export interface SettingType {
   openFolderIds: string[];
   count: number;
   trashCount: number;
-  shuffle?: boolean;
   currentLibrary?: string;
   showFileName?: boolean;
 }
@@ -25,7 +24,6 @@ export const defaultSetting: SettingType = {
   openFolderIds: [],
   count: 0,
   trashCount: 0,
-  shuffle: false,
   showFileName: false,
 };
 

@@ -185,7 +185,7 @@ export const eagle = t.router({
     .query(async ({ input }) => {
       const { ids } = input ?? {};
 
-      const images = [];
+      const images: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
       for (const id of ids) {
         const [image, thumbnail_path] = await Promise.all([
           eagleService.getItemById(id),

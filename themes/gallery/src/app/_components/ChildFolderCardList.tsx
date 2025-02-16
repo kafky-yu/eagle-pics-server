@@ -23,6 +23,17 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
     children = folder?.children ?? [];
   }
 
+  const covers: string[] = children
+    .filter(
+      (child): child is typeof child & { coverId: string } =>
+        child.coverId !== null && child.coverId !== undefined,
+    )
+    .map((child) => child.coverId);
+
+  const { data: cover_images } = trpc.eagle.getItemsByIds.useQuery({
+    ids: covers,
+  });
+
   const { data: config } = trpc.config.findUnique.useQuery();
 
   return (
@@ -52,9 +63,7 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
           );
         };
 
-        // const image = child.images?.[0];
-        const image = null;
-        if (!image || !config) {
+        if (!child.coverId || !config) {
           return (
             <Card key={child.id}>
               <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center bg-neutral pb-14 transition-all ease-in-out">
@@ -62,28 +71,33 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
               </div>
             </Card>
           );
+        } else {
+          const image = cover_images?.find((img) => img.id === child.coverId);
+          if (!image) return null;
+
+          const pathParts = image?.path.split(/\/|\\/);
+          const libraryName = pathParts[pathParts.length - 4]?.replace(
+            ".library",
+            "",
+          );
+          const imageId = pathParts[pathParts.length - 2];
+
+          const host = `http://${config.ip}:${config.clientPort}`;
+          const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
+          const thumbnailPath = image.noThumbnail
+            ? src
+            : `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
+
+          return (
+            <Card key={child.id}>
+              <Image
+                src={thumbnailPath ?? ""}
+                className="absolute left-0 top-0 h-full w-full object-cover object-center transition-all ease-in-out"
+                layout="fill"
+              />
+            </Card>
+          );
         }
-
-        // const pathParts = image.path.split(/\/|\\/);
-        // const libraryName = pathParts[pathParts.length - 4]?.replace(
-        //   ".library",
-        //   "",
-        // );
-        // const imageId = pathParts[pathParts.length - 2];
-
-        // const host = `http://${config.ip}:${config.clientPort}`;
-        // const src = `${host}/static/${libraryName}/images/${imageId}/${image.name}.${image.ext}`;
-        // const thumbnailPath = `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
-
-        return (
-          <Card key={child.id}>
-            {/* <Image
-              // src={thumbnailPath}
-              className="absolute left-0 top-0 h-full w-full object-cover object-center transition-all ease-in-out"
-              layout="fill"
-            /> */}
-          </Card>
-        );
       })}
     </div>
   );

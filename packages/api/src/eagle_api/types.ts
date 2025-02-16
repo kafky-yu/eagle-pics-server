@@ -51,6 +51,7 @@ export interface EagleFolder {
   children: EagleFolder[];
   modificationTime: number;
   imageCount?: number;
+  coverId?: string;
 }
 
 export interface SearchParams {

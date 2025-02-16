@@ -75,6 +75,13 @@ export class EagleService {
     });
   }
 
+  // 获取图片列表
+  async getItemById(id: string): Promise<EagleItem> {
+    return this.request<EagleItem>(`/item/info?id=${id}`, {
+      method: "GET",
+    });
+  }
+
   // 获取文件夹列表
   async getFolders(): Promise<EagleFolder[]> {
     const folders = await this.request<EagleFolder[]>(`/folder/list`, {

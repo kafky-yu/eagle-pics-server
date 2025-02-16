@@ -169,6 +169,41 @@ export const eagle = t.router({
         nextCursor,
       };
     }),
+
+  getItemById: t.procedure
+    .input(imageInput.find.merge(z.object({ id: z.string() })))
+    .query(async ({ input }) => {
+      const { id } = input ?? {};
+
+      const image = await eagleService.getItemById(id);
+
+      return image;
+    }),
+
+  getItemsByIds: t.procedure
+    .input(imageInput.find.merge(z.object({ ids: z.string().array() })))
+    .query(async ({ input }) => {
+      const { ids } = input ?? {};
+
+      const images = [];
+      for (const id of ids) {
+        const [image, thumbnail_path] = await Promise.all([
+          eagleService.getItemById(id),
+          eagleService.getThumbnail(id),
+        ]);
+
+        const ext = image.ext;
+        const image_path = thumbnail_path.replace("_thumbnail.png", `.${ext}`);
+
+        images.push({
+          ...image,
+          path: image_path,
+          noThumbnail: thumbnail_path === image_path ?? true,
+        });
+      }
+
+      return images;
+    }),
 });
 
 function convertOrderBy(orderBy?: {

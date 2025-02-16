@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { t } from "../utils";
 import { eagleService } from "./service";
-import type { EagleItem, SearchParams } from "./types";
+import type { EagleFolder, EagleItem, SearchParams } from "./types";
 
 export const imageInput = {
   find: z.object({
@@ -76,7 +76,8 @@ export const eagle = t.router({
 
       let nextCursor: number | undefined = undefined;
 
-      if (result.length <= limit && result.length > 0) {
+      // 只有当结果数量等于 limit 时，才表示还有下一页
+      if (result.length === limit) {
         nextCursor = (cursor ?? 0) + 1;
       }
 
@@ -91,7 +92,24 @@ export const eagle = t.router({
     .query(async ({ input }) => {
       const { folders } = await eagleService.getLibraryInfo();
 
-      return folders.find((folder) => folder.id === input.id);
+      // 递归查找文件夹
+      const findFolder = (
+        folders: EagleFolder[],
+        id: string,
+      ): EagleFolder | null => {
+        for (const folder of folders) {
+          if (folder.id === id) {
+            return folder;
+          }
+          if (folder.children?.length > 0) {
+            const found = findFolder(folder.children, id);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      return findFolder(folders, input.id);
     }),
 
   // 获取文件夹列表
@@ -138,11 +156,12 @@ export const eagle = t.router({
 
       let nextCursor: number | undefined = undefined;
 
-      if (result.length <= limit && result.length > 0) {
+      // 只有当结果数量等于 limit 时，才表示还有下一页
+      if (result.length === limit) {
         nextCursor = (cursor ?? 0) + 1;
       }
       console.log(
-        `response result.length ${result.length}, nextCursor ${nextCursor},limit ${limit}`,
+        `response result.length ${result.length}, nextCursor ${nextCursor}, limit ${limit}, id ${id}`,
       );
 
       return {

@@ -78,13 +78,46 @@ export function useGalleryImages() {
     const result = Array.from(imageMap.values());
 
     if (setting.orderBy.clientSort) {
+      // 自然排序比较函数
+      const naturalCompare = (a: string, b: string): number => {
+        // 处理空值情况
+        if (!a && !b) return 0;
+        if (!a) return -1;
+        if (!b) return 1;
+
+        const splitRegex = /(\d+|\D+)/g;
+        const ax = a.toLowerCase().match(splitRegex) ?? [];
+        const bx = b.toLowerCase().match(splitRegex) ?? [];
+
+        // 如果任一字符串为空，直接比较原始字符串
+        if (ax.length === 0 && bx.length === 0) return a.localeCompare(b) || 0;
+        if (ax.length === 0) return -1;
+        if (bx.length === 0) return 1;
+
+        for (let i = 0; i < Math.min(ax.length, bx.length); i++) {
+          if (ax[i] !== bx[i]) {
+            const num1 = parseInt(ax[i] ?? "0");
+            const num2 = parseInt(bx[i] ?? "0");
+
+            if (!isNaN(num1) && !isNaN(num2)) {
+              return num1 - num2;
+            }
+            return ax[i]?.localeCompare(bx[i] ?? "") ?? 0;
+          }
+        }
+        return ax.length - bx.length;
+      };
+
       result.sort((a, b) => {
         if (setting.orderBy.name) {
           const aName = a.src.split("/").pop() ?? "";
           const bName = b.src.split("/").pop() ?? "";
-          return setting.orderBy.name === "asc"
-            ? aName.localeCompare(bName)
-            : bName.localeCompare(aName);
+
+          if (setting.orderBy.name === "asc") {
+            return naturalCompare(aName, bName);
+          } else {
+            return naturalCompare(bName, aName);
+          }
         }
 
         if (setting.orderBy.modificationTime) {

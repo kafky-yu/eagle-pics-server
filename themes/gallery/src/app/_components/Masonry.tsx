@@ -60,7 +60,7 @@ function useMasonryLayout({
 }
 
 function MasonryLayout(props: LayoutProps) {
-  const { images, loadAll, onLoadMore, containerRef } = props;
+  const { images, onLoadMore, containerRef } = props;
   const { positioner, handleRef, onRender } = useMasonryLayout({
     images,
     containerWidth: props.containerWidth,
@@ -77,15 +77,8 @@ function MasonryLayout(props: LayoutProps) {
   // 如果是 loadAll 模式或者内容不足一页，自动加载更多
   useEffect(() => {
     if (!images) return;
-
-    if (loadAll) {
-      console.log("加载所有图片模式");
-      onLoadMore();
-    } else if (images?.length < GALLERY_LIMIT) {
-      console.log("内容不足一页，加载更多");
-      onLoadMore();
-    }
-  }, [images, loadAll, onLoadMore]);
+    onLoadMore();
+  }, [images, onLoadMore]);
 
   if (!images) return <div />;
 

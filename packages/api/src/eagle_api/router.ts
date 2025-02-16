@@ -187,19 +187,27 @@ export const eagle = t.router({
 
       const images: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
       for (const id of ids) {
-        const [image, thumbnail_path] = await Promise.all([
-          eagleService.getItemById(id),
-          eagleService.getThumbnail(id),
-        ]);
+        try {
+          const [image, thumbnail_path] = await Promise.all([
+            eagleService.getItemById(id),
+            eagleService.getThumbnail(id),
+          ]);
 
-        const ext = image.ext;
-        const image_path = thumbnail_path.replace("_thumbnail.png", `.${ext}`);
+          const ext = image.ext;
+          const image_path = thumbnail_path.replace(
+            "_thumbnail.png",
+            `.${ext}`,
+          );
 
-        images.push({
-          ...image,
-          path: image_path,
-          noThumbnail: thumbnail_path === image_path ?? true,
-        });
+          images.push({
+            ...image,
+            path: image_path,
+            noThumbnail: thumbnail_path === image_path ?? true,
+          });
+        } catch (error) {
+          console.error(`获取图片失败 ${id}:`, error);
+          continue;
+        }
       }
 
       return images;

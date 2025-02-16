@@ -50,7 +50,7 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
               className="group relative flex aspect-square w-full cursor-pointer items-end justify-center overflow-hidden rounded-box border border-base-content/10 bg-base-200/30 p-2"
             >
               <div className="relative z-10 w-full overflow-hidden rounded-box bg-base-100/70 py-2 text-center backdrop-blur-sm">
-                <p className="text-base font-medium">{child.name}</p>
+                <p className="text-base font-medium line-clamp-2">{child.name}</p>
                 {/* <p className="mt-1 text-xs text-base-content/70">
                   {child._count.images
                     ? `${child._count.images} 个文件`
@@ -92,7 +92,7 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
             <Card key={child.id}>
               <Image
                 src={thumbnailPath ?? ""}
-                className="absolute left-0 top-0 h-full w-full object-cover object-center transition-all ease-in-out"
+                className="absolute left-0 top-0 h-full w-full object-contain object-center transition-all ease-in-out bg-base-200"
                 layout="fill"
               />
             </Card>

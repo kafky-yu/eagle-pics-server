@@ -17,7 +17,7 @@ export interface SettingType {
 }
 
 export const defaultSetting: SettingType = {
-  layout: "masonry",
+  layout: "responsive",
   orderBy: {
     modificationTime: "desc",
   },

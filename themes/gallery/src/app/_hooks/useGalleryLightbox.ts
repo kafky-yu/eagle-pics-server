@@ -99,9 +99,9 @@ export function useGalleryLightbox() {
 
     initLightboxVideoPlugin(lightbox);
 
-    // lightbox.on("change", () => {
-    //   setCurrentImageIndex(lightbox.pswp?.currIndex ?? null);
-    // });
+    lightbox.on("change", () => {
+      setCurrentImageIndex(lightbox.pswp?.currIndex ?? null);
+    });
 
     lightbox.on("close", () => {
       setIsAutoPlaying(false);

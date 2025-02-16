@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/legacy/image";
 import { useSearchParams } from "next/navigation";
 import { MasonryScroller, useInfiniteLoader, usePositioner } from "masonic";
@@ -28,19 +28,33 @@ function useMasonryLayout({
   const columnWidth = windowWidth < 768 ? windowWidth / 3 : 224;
   const columnGutter = windowWidth < 768 ? 8 : 12;
 
+  // 使用 useRef 来保存上一次的图片数量
+  const prevImagesLengthRef = useRef(0);
+
+  // 使用 useMemo 来缓存已计算的图片高度
+  const processedImages = useMemo(() => {
+    return images?.map((img) => ({
+      ...img,
+      // 保持每个图片的高度计算结果稳定
+      height: (img.height / img.width) * columnWidth,
+    }));
+  }, [images, columnWidth]);
+
   const positioner = usePositioner(
     {
       width: containerWidth,
       columnGutter,
       columnWidth,
     },
-    [
-      images?.map((img) => ({
-        ...img,
-        height: (img.height / img.width) * columnWidth,
-      })),
-    ],
+    [processedImages],
   );
+
+  // 更新图片数量记录
+  useEffect(() => {
+    if (images?.length) {
+      prevImagesLengthRef.current = images.length;
+    }
+  }, [images?.length]);
 
   const onRender = useInfiniteLoader(onLoadMore, {
     minimumBatchSize: GALLERY_LIMIT,

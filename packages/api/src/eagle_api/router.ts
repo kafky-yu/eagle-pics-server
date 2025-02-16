@@ -122,8 +122,6 @@ export const eagle = t.router({
         folders: id,
       };
 
-      console.log("cursor :", cursor);
-
       const images = await eagleService.getItems(search_params);
 
       const result: (EagleItem & { path: string; noThumbnail: boolean })[] = [];
@@ -183,8 +181,6 @@ export const eagle = t.router({
       if (result.length <= limit && result.length > 0) {
         nextCursor = (cursor ?? 0) + 1;
       }
-
-      console.log("response", result, nextCursor);
 
       return {
         data: result,

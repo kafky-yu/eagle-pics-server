@@ -27,10 +27,14 @@ export const getImageQuery = (
             limit,
             includes: ["colors"],
             // 如果是前端排序，则不传递排序参数
-            ...(!orderBy.clientSort ? { orderBy } : {}),
+            orderBy,
           },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
+            // 保持缓存不过期
+            staleTime: Infinity,
+            // 当窗口聚焦时自动重新获取数据
+            refetchOnWindowFocus: true,
           },
         );
       } else {
@@ -39,10 +43,14 @@ export const getImageQuery = (
             limit,
             includes: ["colors"],
             // 如果是前端排序，则不传递排序参数
-            ...(!orderBy.clientSort ? { orderBy } : {}),
+            orderBy,
           },
           {
             getNextPageParam: (lastPage) => lastPage.nextCursor,
+            // 保持缓存不过期
+            staleTime: Infinity,
+            // 当窗口聚焦时自动重新获取数据
+            refetchOnWindowFocus: true,
           },
         );
       }
@@ -61,6 +69,10 @@ export const getImageQuery = (
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
+        // 保持缓存不过期
+        staleTime: Infinity,
+        // 当窗口聚焦时自动重新获取数据
+        refetchOnWindowFocus: true,
       },
     );
   }

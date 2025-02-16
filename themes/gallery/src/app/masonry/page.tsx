@@ -24,30 +24,39 @@ function Home() {
   const search = useSearchParams();
   const m = search.get("m");
 
-  // 使用 useMemo 来控制何时重新请求数据
-  const queryKey = useMemo(
-    () => [
-      m,
-      // 如果是前端排序，则不触发重新请求
-      setting.orderBy.clientSort ? undefined : setting.orderBy,
-      setting.shuffle,
-    ],
-    [m, setting.orderBy, setting.shuffle],
-  );
-
   const imageQuery = useCallback(
     () => getImageQuery(m, setting.orderBy, setting.shuffle),
-    queryKey,
+    [m, setting.orderBy, setting.shuffle],
   )();
 
   const pages = imageQuery.data?.pages;
   // const count = imageQuery.data?.pages[0]?.count;
 
   const images = useMemo(() => {
-    if (!config) return [];
+    if (!config || !pages) return [];
 
-    const result = pages?.map((page) => {
-      return page.data.map((image) => {
+    // 使用 Map 存储图片数据，确保唯一性
+    const imageMap = new Map<
+      string,
+      {
+        id: string;
+        src: string;
+        thumbnailPath: string;
+        msrc: string;
+        bgColor: string;
+        width: number;
+        height: number;
+        ext: typeof EXT;
+        type: "video" | "image";
+        modificationTime: number;
+      }
+    >();
+
+    pages.forEach((page) => {
+      page.data.forEach((image) => {
+        // 如果图片已经存在，跳过
+        if (imageMap.has(image.id)) return;
+
         const pathParts = image.path.split(/\/|\\/);
         const libraryName = pathParts[pathParts.length - 4]?.replace(
           ".library",
@@ -61,7 +70,7 @@ function Home() {
           ? src
           : `${host}/static/${libraryName}/images/${imageId}/${image.name}_thumbnail.png`;
 
-        return {
+        imageMap.set(image.id, {
           id: image.id,
           src,
           thumbnailPath,
@@ -73,41 +82,38 @@ function Home() {
           height: image.height,
           ext: image.ext as unknown as typeof EXT,
           type: VIDEO_EXT.includes(image.ext) ? "video" : "image",
-        };
+          modificationTime: image.modificationTime,
+        });
       });
     });
 
-    const flatResult = result?.flat() ?? [];
+    const result = Array.from(imageMap.values());
 
-    // 前端排序
-    return [...flatResult].sort((a, b) => {
-      // 按名称排序
-      if (setting.orderBy.name) {
-        const aName = a.src.split("/").pop() ?? "";
-        const bName = b.src.split("/").pop() ?? "";
-        return setting.orderBy.name === "asc"
-          ? aName.localeCompare(bName)
-          : bName.localeCompare(aName);
-      }
+    // 只在需要前端排序时才排序
+    if (setting.orderBy.clientSort) {
+      result.sort((a, b) => {
+        // 按名称排序
+        if (setting.orderBy.name) {
+          const aName = a.src.split("/").pop() ?? "";
+          const bName = b.src.split("/").pop() ?? "";
+          return setting.orderBy.name === "asc"
+            ? aName.localeCompare(bName)
+            : bName.localeCompare(aName);
+        }
 
-      // 按修改时间排序
-      if (setting.orderBy.modificationTime) {
-        const aTime =
-          pages
-            ?.find((p) => p.data.some((img) => img.id === a.id))
-            ?.data.find((img) => img.id === a.id)?.modificationTime ?? 0;
-        const bTime =
-          pages
-            ?.find((p) => p.data.some((img) => img.id === b.id))
-            ?.data.find((img) => img.id === b.id)?.modificationTime ?? 0;
-        return setting.orderBy.modificationTime === "asc"
-          ? aTime - bTime
-          : bTime - aTime;
-      }
+        // 按修改时间排序
+        if (setting.orderBy.modificationTime) {
+          return setting.orderBy.modificationTime === "asc"
+            ? (a.modificationTime ?? 0) - (b.modificationTime ?? 0)
+            : (b.modificationTime ?? 0) - (a.modificationTime ?? 0);
+        }
 
-      return 0;
-    });
-  }, [config, pages, setting.orderBy.modificationTime, setting.orderBy.name]);
+        return 0;
+      });
+    }
+
+    return result;
+  }, [config, pages, setting.orderBy]);
 
   const onLoadMore = async () => {
     if (imageQuery.hasNextPage) {

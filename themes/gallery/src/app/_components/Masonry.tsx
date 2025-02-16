@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect } from "react";
 import Image from "next/legacy/image";
+import { useSearchParams } from "next/navigation";
 import { MasonryScroller, useInfiniteLoader, usePositioner } from "masonic";
 import { useRecoilValue } from "recoil";
 
 import { settingSelector } from "~/states/setting";
 import { GALLERY_LIMIT } from "../_hooks/useGalleryLoader";
 import type { GalleryImage, LayoutProps } from "../types/gallery";
+import ChildFolderCardList from "./ChildFolderCardList";
 import { GalleryBase } from "./GalleryBase";
 
 interface Props {
@@ -68,6 +70,9 @@ function MasonryLayout(props: LayoutProps) {
   });
 
   const setting = useRecoilValue(settingSelector);
+  const search = useSearchParams();
+  //这里拿到当前的文件夹id
+  const folderId = search.get("m") ?? "";
 
   // 如果是 loadAll 模式或者内容不足一页，自动加载更多
   useEffect(() => {
@@ -86,6 +91,10 @@ function MasonryLayout(props: LayoutProps) {
 
   return (
     <div>
+      {/* 文件夹导航 */}
+      <div className="mb-4">
+        <ChildFolderCardList folderId={folderId} />
+      </div>
       <MasonryScroller
         positioner={positioner}
         containerRef={containerRef}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import Image from "next/legacy/image";
+import { useSearchParams } from "next/navigation";
 import justifyLayout from "justified-layout";
 import {
   MasonryScroller,
@@ -17,6 +18,7 @@ import { useWindowSize } from "~/hooks/useWindowSize";
 import { settingSelector } from "~/states/setting";
 import { GALLERY_LIMIT } from "../_hooks/useGalleryLoader";
 import type { GalleryImage, LayoutProps } from "../types/gallery";
+import ChildFolderCardList from "./ChildFolderCardList";
 import { GalleryBase } from "./GalleryBase"; // 更新 GalleryBase 的导入路径
 
 interface Props {
@@ -95,6 +97,9 @@ function ResponsiveLayout(props: LayoutProps) {
   const { images, loadAll, onLoadMore, containerRef } = props;
 
   const setting = useRecoilValue(settingSelector);
+  const search = useSearchParams();
+  //这里拿到当前的文件夹id
+  const folderId = search.get("m") ?? "";
 
   const [windowWidth, windowHeight] = useWindowSize();
   const { offset } = useContainerPosition(containerRef, [
@@ -119,6 +124,9 @@ function ResponsiveLayout(props: LayoutProps) {
 
   return (
     <div className="space-y-3">
+      <div className="mb-4">
+        <ChildFolderCardList folderId={folderId} />
+      </div>
       <MasonryScroller
         onRender={onRender}
         positioner={positioner}

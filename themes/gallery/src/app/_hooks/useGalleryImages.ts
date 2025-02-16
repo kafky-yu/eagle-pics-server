@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRecoilValue } from "recoil";
+
 import { VIDEO_EXT } from "@rao-pics/constant";
 import type { EXT } from "@rao-pics/constant";
-import { trpc } from "~/utils/trpc";
+
 import { settingSelector } from "~/states/setting";
 import { getImageQuery } from "~/utils/get-image-query";
+import { trpc } from "~/utils/trpc";
 
 export interface GalleryImage {
   id: string;

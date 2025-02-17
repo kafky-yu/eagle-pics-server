@@ -145,9 +145,7 @@ function ResponsiveLayout(props: LayoutProps) {
                       key={image.id}
                       data-pswp-width={image.width}
                       data-pswp-height={image.height}
-                      data-pswp-type={
-                        VIDEO_EXT.includes(image.ext) ? "video" : "image"
-                      }
+                      data-pswp-type={image.type}
                       rel="noreferrer"
                       className="relative block overflow-hidden rounded-box shadow"
                       style={{

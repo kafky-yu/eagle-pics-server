@@ -53,6 +53,7 @@ export function ClientGalleryBase({
         w: img.width,
         h: img.height,
         msrc: img.msrc,
+        type: img.type,
       }));
       lightboxRef.current?.loadAndOpen(index, dataSource);
     }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { getFullscreenAPI, getFullscreenPromise } from "~/utils/fullscreen";
+import initLightboxAudioPlugin from "~/utils/photoswipe-audio";
 import initLightboxVideoPlugin from "~/utils/photoswipe-video";
 
 export function useGalleryLightbox() {
@@ -44,13 +45,12 @@ export function useGalleryLightbox() {
     const lightbox = new PhotoSwipeLightbox({
       pswpModule: () => import("photoswipe"),
       loop: false,
+      // 禁用打开/关闭动画
       showAnimationDuration: 0,
       hideAnimationDuration: 0,
+      // 由于视口大小在初始化时不可预测，所以不预加载第一张幻灯片
       preloadFirstSlide: false,
       children: "a",
-      initialZoomLevel: "fit",
-      secondaryZoomLevel: 1.5,
-      maxZoomLevel: 1,
     });
 
     lightbox.on("uiRegister", function () {
@@ -98,6 +98,7 @@ export function useGalleryLightbox() {
     });
 
     initLightboxVideoPlugin(lightbox);
+    initLightboxAudioPlugin(lightbox);
 
     lightbox.on("change", () => {
       setCurrentImageIndex(lightbox.pswp?.currIndex ?? null);

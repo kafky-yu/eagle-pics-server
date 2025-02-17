@@ -114,6 +114,9 @@ function MasonryLayout(props: LayoutProps) {
             key={image.id}
             className="relative cursor-pointer"
             ref={handleRef}
+            data-pswp-type={image.type}
+            data-pswp-width={image.width}
+            data-pswp-height={image.height}
             onClick={() => props.onImageClick?.(image)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {

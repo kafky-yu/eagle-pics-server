@@ -44,6 +44,11 @@ export const VIDEO_EXT = [
 ] as const;
 
 /**
+ * 支持的音频格式
+ */
+export const AUDIO_EXT = ["mp3", "wav", "ogg", "m4a", "aac", "ogg"] as const;
+
+/**
  * 支持的图片格式
  */
 export const IMG_EXT = [
@@ -57,4 +62,4 @@ export const IMG_EXT = [
   "svg",
 ] as const;
 
-export const EXT = [...VIDEO_EXT, ...IMG_EXT] as const;
+export const EXT = [...VIDEO_EXT, ...IMG_EXT, ...AUDIO_EXT] as const;

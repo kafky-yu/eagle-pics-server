@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRecoilValue } from "recoil";
 
-import { VIDEO_EXT } from "@rao-pics/constant";
+import { VIDEO_EXT, AUDIO_EXT } from "@rao-pics/constant";
 import type { EXT } from "@rao-pics/constant";
 
 import { settingSelector } from "~/states/setting";
@@ -18,7 +18,7 @@ export interface GalleryImage {
   width: number;
   height: number;
   ext: typeof EXT;
-  type: "video" | "image";
+  type: "video" | "image" | "audio";
   modificationTime: number;
 }
 
@@ -69,7 +69,7 @@ export function useGalleryImages() {
           width: image.width,
           height: image.height,
           ext: image.ext as unknown as typeof EXT,
-          type: VIDEO_EXT.includes(image.ext) ? "video" : "image",
+          type: VIDEO_EXT.includes(image.ext) ? "video" : AUDIO_EXT.includes(image.ext) ? "audio" : "image",
           modificationTime: image.modificationTime,
         });
       });

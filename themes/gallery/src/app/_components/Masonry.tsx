@@ -88,11 +88,11 @@ function MasonryLayout(props: LayoutProps) {
   //这里拿到当前的文件夹id
   const folderId = search.get("m") ?? "";
 
-  // 如果是 loadAll 模式或者内容不足一页，自动加载更多
+  // 只在文件夹页面时自动加载更多
   useEffect(() => {
-    if (!images) return;
+    if (!images || !folderId) return;
     onLoadMore();
-  }, [images, onLoadMore]);
+  }, [images, onLoadMore, folderId]);
 
   if (!images) return <div />;
 

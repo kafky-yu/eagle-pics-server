@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/legacy/image";
 import { useSearchParams } from "next/navigation";
 import justifyLayout from "justified-layout";
@@ -11,8 +11,6 @@ import {
   usePositioner,
 } from "masonic";
 import { useRecoilValue } from "recoil";
-
-import { VIDEO_EXT } from "@rao-pics/constant";
 
 import { useWindowSize } from "~/hooks/useWindowSize";
 import { settingSelector } from "~/states/setting";
@@ -65,6 +63,14 @@ function useResponsiveLayout({
     return null;
   }, [images, containerWidth]);
 
+  // 使用 useRef 来跟踪上一次的宽度
+  const lastWidthRef = useRef(containerWidth);
+
+  // 更新上一次的宽度
+  useEffect(() => {
+    lastWidthRef.current = containerWidth;
+  }, [containerWidth]);
+
   const positioner = usePositioner(
     {
       width: containerWidth,
@@ -107,11 +113,11 @@ function ResponsiveLayout(props: LayoutProps) {
     windowHeight,
   ]);
 
-  // 如果是 loadAll 模式或者内容不足一页，自动加载更多
+  // 只在文件夹页面时自动加载更多
   useEffect(() => {
-    if (!images) return;
+    if (!images || !folderId) return;
     onLoadMore();
-  }, [images, onLoadMore]);
+  }, [images, onLoadMore, folderId]);
 
   if (!items) return null;
 
@@ -121,6 +127,7 @@ function ResponsiveLayout(props: LayoutProps) {
         <ChildFolderCardList folderId={folderId} />
       </div>
       <MasonryScroller
+        key={`${windowWidth}-${windowHeight}`}
         onRender={onRender}
         positioner={positioner}
         height={windowHeight}

@@ -92,7 +92,7 @@ model Image {
   // 颜色
   colors           Color[]
   // 文件夹
-  folders          Folder[]
+  folders          Folder[] @relation("ImageToFolder")
   // 标签
   tags             Tag[]
   // blurDataURL Base64
@@ -113,14 +113,11 @@ model Color {
 }
 
 model Folder {
-  id           String  @id @unique @default(uuid())
-  name         String
-  pid          String?
-  description  String?
-  images       Image[]
-  password     String?
-  passwordTips String?
-  show         Boolean @default(true)
+  id      String  @id @unique @default(uuid())
+  name    String
+  coverId String?
+  count   Int     @default(0)
+  images  Image[] @relation("ImageToFolder")
 }
 
 model Log {

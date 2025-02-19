@@ -31,23 +31,25 @@ const Setting = () => {
 
   const { data: libraries } = trpc.eagle.getLibraryList.useQuery();
   const { data: library } = trpc.eagle.getLibraryInfo.useQuery();
+  const { data: folders } = trpc.eagle.getFolders.useQuery();
 
   const switchLibrary = trpc.eagle.switchLibrary.useMutation();
 
-  // const { data: count } = trpc.image.count.useQuery(
-  //   { libraryPath: setting.currentLibrary ?? "" },
-  //   { enabled: !!setting.currentLibrary },
-  // );
-
   // 更新图片计数
-  // React.useEffect(() => {
-  //   if (typeof count === "number") {
-  //     setSetting((prev) => ({
-  //       ...prev,
-  //       count,
-  //     }));
-  //   }
-  // }, [count, setSetting]);
+  React.useEffect(() => {
+    if (folders) {
+      // 计算第一层文件夹的 count 总和
+      const totalCount = folders.reduce(
+        (sum, folder) => sum + (folder.count ?? 0),
+        0,
+      );
+      setSetting((prev) => ({
+        ...prev,
+        count: totalCount,
+      }));
+    }
+  }, [folders, setSetting]);
+
   const { data: config } = trpc.config.findUnique.useQuery();
 
   React.useEffect(() => {

@@ -19,6 +19,18 @@ const BasicPage = () => {
   const { data: library } = trpc.eagle.getLibraryInfo.useQuery();
   const { data: libraries } = trpc.eagle.getLibraryList.useQuery();
 
+  const createFolders = trpc.eagle.createFolders.useMutation({
+    onSuccess: async () => {
+      await window.dialog.showMessageBox({
+        type: "info",
+        message: "文件夹同步完成",
+      });
+    },
+    onError: (err) => {
+      void window.dialog.showErrorBox("同步文件夹失败", err.message);
+    },
+  });
+
   const switchLibrary = trpc.eagle.switchLibrary.useMutation({
     onError: (err) => {
       console.error("切换资源库失败:", err);
@@ -205,6 +217,28 @@ const BasicPage = () => {
             onRightClick={() => {
               void window.shell.openExternal(site);
             }}
+          />
+
+          <Row
+            left={
+              <>
+                <div className="rounded-box bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-1 text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </div>
+                <span className="ml-2 flex items-center">同步</span>
+              </>
+            }
+            right={
+              <button
+                className={`btn btn-sm border-0 ${createFolders.isPending ? 'bg-base-200 text-base-content' : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600'}`}
+                onClick={() => createFolders.mutate()}
+                disabled={createFolders.isPending}
+              >
+                {createFolders.isPending ? "同步中..." : "同步文件夹"}
+              </button>
+            }
           />
         </div>
       </div>

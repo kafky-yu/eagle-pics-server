@@ -53,11 +53,9 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
                 <p className="line-clamp-2 text-base font-medium">
                   {child.name}
                 </p>
-                {/* <p className="mt-1 text-xs text-base-content/70">
-                  {child._count.images
-                    ? `${child._count.images} 个文件`
-                    : "查看子文件夹"}
-                </p> */}
+                <p className="mt-1 text-xs text-base-content/70">
+                  {child.count ? `${child.count} 个文件` : "查看子文件夹"}
+                </p>
               </div>
 
               {props.children}

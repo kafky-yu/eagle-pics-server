@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { prisma } from "@rao-pics/db";
+
 import { t } from "../utils";
 import { eagleService } from "./service";
 import type { EagleFolder, EagleItem, SearchParams } from "./types";
@@ -91,6 +93,12 @@ export const eagle = t.router({
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const { folders } = await eagleService.getLibraryInfo();
+      const dbFolders: {
+        id: string;
+        name: string;
+        coverId: string | null;
+        count: number;
+      }[] = await prisma.folder.findMany();
 
       // 递归查找文件夹
       const findFolder = (
@@ -109,11 +117,41 @@ export const eagle = t.router({
         return null;
       };
 
-      return findFolder(folders, input.id);
+      const result = findFolder(folders, input.id);
+
+      return {
+        ...result,
+        children: result?.children?.map((child) => {
+          const dbFolder = dbFolders.find((f) => f.id === child.id);
+          return {
+            ...child,
+            count: dbFolder?.count ?? 0,
+            coverId: child.coverId ?? dbFolder?.coverId ?? undefined,
+          };
+        }),
+      };
     }),
 
   // 获取文件夹列表
-  getFolders: t.procedure.query(() => eagleService.getFolders()),
+  getFolders: t.procedure.query(async () => {
+    const eagleFolders = await eagleService.getFolders();
+    const dbFolders: {
+      id: string;
+      name: string;
+      coverId: string | null;
+      count: number;
+    }[] = await prisma.folder.findMany();
+
+    // 合并 Eagle 和数据库的文件夹信息
+    return eagleFolders.map((folder): EagleFolder & { count: number } => {
+      const dbFolder = dbFolders.find((f) => f.id === folder.id);
+      return {
+        ...folder,
+        count: dbFolder?.count ?? 0,
+        coverId: folder.coverId ?? dbFolder?.coverId ?? undefined,
+      };
+    });
+  }),
 
   // 获取缩略图
   getThumbnail: t.procedure
@@ -160,9 +198,6 @@ export const eagle = t.router({
       if (result.length === limit) {
         nextCursor = (cursor ?? 0) + 1;
       }
-      console.log(
-        `response result.length ${result.length}, nextCursor ${nextCursor}, limit ${limit}, id ${id}`,
-      );
 
       return {
         data: result,
@@ -212,6 +247,101 @@ export const eagle = t.router({
 
       return images;
     }),
+
+  createFolders: t.procedure.mutation(async () => {
+    const { folders } = await eagleService.getLibraryInfo();
+
+    // 构建文件夹的层级结构树
+    const folderMap = new Map<
+      string,
+      {
+        folder: EagleFolder;
+        children: string[];
+        totalCount?: number;
+      }
+    >();
+
+    // 先建立文件夹之间的关系
+    const buildFolderTree = (folder: EagleFolder) => {
+      folderMap.set(folder.id, {
+        folder,
+        children: folder.children?.map((child) => child.id) ?? [],
+      });
+      folder.children?.forEach(buildFolderTree);
+    };
+    folders.forEach(buildFolderTree);
+
+    // 从叶子节点开始计算
+    const leafFolders = Array.from(folderMap.entries())
+      .filter(([_, info]) => info.children.length === 0)
+      .map(([id]) => id);
+
+    // 按层级处理文件夹
+    const processedFolders = new Set<string>();
+    const folderQueue = [...leafFolders];
+
+    const results: Awaited<ReturnType<typeof prisma.folder.upsert>>[] = [];
+    while (folderQueue.length > 0) {
+      const folderId = folderQueue.shift()!;
+      if (processedFolders.has(folderId)) continue;
+
+      const folderInfo = folderMap.get(folderId)!;
+      const folder = folderInfo.folder;
+
+      // 获取当前文件夹的图片
+      let allImages: EagleItem[] = [];
+      let offset = 0;
+      const limit = 200;
+
+      while (true) {
+        const images = await eagleService.getItems({
+          limit,
+          offset,
+          folders: folder.id,
+        });
+
+        if (!images || images.length === 0) break;
+        allImages = allImages.concat(images);
+        if (images.length < limit) break;
+        offset += 1;
+      }
+
+      // 计算总 count：当前文件夹的图片数 + 所有子文件夹的 count 总和
+      const childrenCount = folderInfo.children.reduce((sum, childId) => {
+        return sum + (folderMap.get(childId)?.totalCount ?? 0);
+      }, 0);
+      const totalCount = allImages.length + childrenCount;
+      folderInfo.totalCount = totalCount;
+
+      // 更新数据库
+      const result = await prisma.folder.upsert({
+        where: { id: folder.id },
+        create: {
+          id: folder.id,
+          name: folder.name,
+          count: totalCount,
+          coverId: folder.coverId ?? allImages[0]?.id ?? null,
+        },
+        update: {
+          name: { set: folder.name },
+          count: { set: totalCount },
+          coverId: { set: folder.coverId ?? allImages[0]?.id ?? null },
+        },
+      });
+      results.push(result);
+      processedFolders.add(folderId);
+
+      // 将该文件夹的父文件夹加入队列
+      const parentFolders = Array.from(folderMap.entries())
+        .filter(([_, info]) => info.children.includes(folderId))
+        .map(([id]) => id);
+      folderQueue.push(...parentFolders);
+    }
+
+    return {
+      count: results.length,
+    };
+  }),
 });
 
 function convertOrderBy(orderBy?: {

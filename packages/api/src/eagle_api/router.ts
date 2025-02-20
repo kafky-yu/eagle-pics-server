@@ -332,10 +332,23 @@ export const eagle = t.router({
       processedFolders.add(folderId);
 
       // 将该文件夹的父文件夹加入队列
+      // 1. 找到所有包含当前文件夹作为子文件夹的文件夹
       const parentFolders = Array.from(folderMap.entries())
         .filter(([_, info]) => info.children.includes(folderId))
         .map(([id]) => id);
-      folderQueue.push(...parentFolders);
+
+      // 2. 将这些父文件夹加入队列
+      for (const parentId of parentFolders) {
+        // 只有当父文件夹的所有子文件夹都处理完毕时，才处理父文件夹
+        const parentInfo = folderMap.get(parentId)!;
+        const allChildrenProcessed = parentInfo.children.every(childId =>
+          processedFolders.has(childId)
+        );
+        
+        if (allChildrenProcessed && !processedFolders.has(parentId)) {
+          folderQueue.push(parentId);
+        }
+      }
     }
 
     return {

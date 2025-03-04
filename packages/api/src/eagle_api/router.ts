@@ -71,7 +71,7 @@ export const eagle = t.router({
         const temp = {
           ...image,
           path: image_path,
-          noThumbnail: thumbnail_path === image_path ?? true,
+          noThumbnail: thumbnail_path === image_path,
         };
         result.push(temp);
       }
@@ -187,7 +187,7 @@ export const eagle = t.router({
         const temp = {
           ...image,
           path: image_path,
-          noThumbnail: thumbnail_path === image_path ?? true,
+          noThumbnail: thumbnail_path === image_path,
         };
         result.push(temp);
       }
@@ -237,7 +237,7 @@ export const eagle = t.router({
           images.push({
             ...image,
             path: image_path,
-            noThumbnail: thumbnail_path === image_path ?? true,
+            noThumbnail: thumbnail_path === image_path,
           });
         } catch (error) {
           console.error(`获取图片失败 ${id}:`, error);
@@ -250,6 +250,34 @@ export const eagle = t.router({
 
   createFolders: t.procedure.mutation(async () => {
     const { folders } = await eagleService.getLibraryInfo();
+
+    // 获取数据库中所有的文件夹
+    const existingFolders = await prisma.folder.findMany();
+
+    // 递归收集所有文件夹的 ID
+    const eagleFolderIds = new Set<string>();
+    const collectFolderIds = (folder: EagleFolder) => {
+      eagleFolderIds.add(folder.id);
+      folder.children?.forEach(collectFolderIds);
+    };
+    folders.forEach(collectFolderIds);
+
+    // 找出需要删除的文件夹（在数据库中存在但在 Eagle 中不存在）
+    const foldersToDelete = existingFolders.filter(
+      (folder) => !eagleFolderIds.has(folder.id),
+    );
+
+    // 删除不存在的文件夹
+    if (foldersToDelete.length > 0) {
+      await prisma.folder.deleteMany({
+        where: {
+          id: {
+            in: foldersToDelete.map((folder) => folder.id),
+          },
+        },
+      });
+      console.log(`已删除 ${foldersToDelete.length} 个不存在的文件夹`);
+    }
 
     // 构建文件夹的层级结构树
     const folderMap = new Map<
@@ -341,10 +369,10 @@ export const eagle = t.router({
       for (const parentId of parentFolders) {
         // 只有当父文件夹的所有子文件夹都处理完毕时，才处理父文件夹
         const parentInfo = folderMap.get(parentId)!;
-        const allChildrenProcessed = parentInfo.children.every(childId =>
-          processedFolders.has(childId)
+        const allChildrenProcessed = parentInfo.children.every((childId) =>
+          processedFolders.has(childId),
         );
-        
+
         if (allChildrenProcessed && !processedFolders.has(parentId)) {
           folderQueue.push(parentId);
         }

@@ -8,7 +8,7 @@ import type { EagleFolder, EagleItem, SearchParams } from "./types";
 
 export const imageInput = {
   find: z.object({
-    limit: z.number().min(1).max(100).optional(),
+    limit: z.number().min(1).max(10000).optional(),
     cursor: z.number().nullish(),
     includes: z.enum(["tags", "colors", "folders"]).array().optional(),
     orderBy: z

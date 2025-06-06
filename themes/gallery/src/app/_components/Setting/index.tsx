@@ -244,14 +244,14 @@ const Setting = () => {
                 </span>
 
                 <select
-                  value={setting.orderBy.modificationTime}
+                  value={"name_" + setting.orderBy.name}
                   onChange={changeOrderBy}
                   className="select select-sm bg-base-200 font-normal focus:outline-none"
                 >
-                  <option value={"asc"}>↑ 添加时间</option>
-                  <option value={"desc"}>↓ 添加时间</option>
                   <option value={"name_asc"}>↑ 文件名</option>
                   <option value={"name_desc"}>↓ 文件名</option>
+                  <option value={"asc"}>↑ 添加时间</option>
+                  <option value={"desc"}>↓ 添加时间</option>
                 </select>
               </div>
             </div>

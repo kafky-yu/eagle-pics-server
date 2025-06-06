@@ -19,7 +19,8 @@ export interface SettingType {
 export const defaultSetting: SettingType = {
   layout: "responsive",
   orderBy: {
-    modificationTime: "desc",
+    name: "asc",
+    clientSort: true,
   },
   openFolderIds: [],
   count: 0,

@@ -11,7 +11,7 @@ export const getImageQuery = (
   m: string | null,
   orderBy: SettingType["orderBy"],
 ) => {
-  const limit = 50;
+  const limit = 1000;
 
   let find: ReturnType<typeof trpc.eagle.getItems.useInfiniteQuery> | undefined;
   let findByFolderId:

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useSetRecoilState } from "recoil";
+import { lightboxOpenState } from "~/states/lightbox";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { getFullscreenAPI, getFullscreenPromise } from "~/utils/fullscreen";
@@ -6,6 +8,7 @@ import initLightboxAudioPlugin from "~/utils/photoswipe-audio";
 import initLightboxVideoPlugin from "~/utils/photoswipe-video";
 
 export function useGalleryLightbox() {
+  const setLightboxOpen = useSetRecoilState(lightboxOpenState);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(
     null,
@@ -100,12 +103,17 @@ export function useGalleryLightbox() {
     initLightboxVideoPlugin(lightbox);
     initLightboxAudioPlugin(lightbox);
 
+    lightbox.on("afterInit", () => {
+      setLightboxOpen(true);
+    });
+
     lightbox.on("change", () => {
       setCurrentImageIndex(lightbox.pswp?.currIndex ?? null);
     });
 
     lightbox.on("close", () => {
       setIsAutoPlaying(false);
+      setLightboxOpen(false);
       setCurrentImageIndex(null);
       if (fullscreenAPI?.isFullscreen()) {
         fullscreenAPI.exit();
@@ -124,7 +132,7 @@ export function useGalleryLightbox() {
         clearInterval(autoPlayIntervalRef.current);
       }
     };
-  }, []);
+  }, [setLightboxOpen]);
 
   useEffect(() => {
     if (!lightboxRef.current?.pswp || currentImageIndex === null) return;

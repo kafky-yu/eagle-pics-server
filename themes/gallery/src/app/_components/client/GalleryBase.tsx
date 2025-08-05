@@ -1,7 +1,6 @@
 import "photoswipe/style.css";
 
-import { useRef } from "react";
-import { useContainerPosition } from "masonic";
+import { useEffect, useRef, useState } from "react";
 import type { DataSourceArray } from "photoswipe";
 
 import type { GalleryImage } from "~/app/types/gallery";
@@ -33,52 +32,73 @@ export function ClientGalleryBase({
   children,
   layout,
 }: GalleryBaseProps) {
-  const containerRef = useRef(null);
-  const [windowWidth, windowHeight] = useWindowSize();
+  const { lightboxRef } = useGalleryLightbox();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [windowWidth] = useWindowSize();
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const { width } = useContainerPosition(containerRef, [
-    windowWidth,
-    windowHeight,
-  ]);
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, [windowWidth]);
 
   useGalleryLoader(images, onLoadMore, loadAll);
-  const { lightboxRef } = useGalleryLightbox();
 
   const handleImageClick = (image: GalleryImage) => {
     if (!images) return;
-    const index = images.findIndex((img) => img.id === image.id);
-    if (index !== -1) {
-      const dataSource: DataSourceArray = images.map((img) => ({
-        src: img.src,
-        w: img.width,
-        h: img.height,
-        msrc: img.msrc,
-        type: img.type,
-      }));
-      lightboxRef.current?.loadAndOpen(index, dataSource);
-    }
+    const dataSource = images.map((image) => {
+      const item: DataSourceArray[number] = {
+        src: image.src,
+        width: image.width,
+        height: image.height,
+        msrc: image.msrc,
+        id: image.id,
+      };
+
+      switch (image.type) {
+        case "video":
+          // For video slides, PhotoSwipe requires an `html` property that contains the video tag.
+          item.html = `<div class="pswp__video-container"><video src="${image.src}" class="pswp__video" controls autoplay loop></video></div>`;
+          // `src` is not used for video slides, but it's good to keep it for consistency or fallbacks.
+          delete item.src;
+          break;
+        case "audio":
+          // For audio slides, we provide an `html` property with an audio tag.
+          item.html = `<div class="pswp__audio-container" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;"><audio src="${image.src}" controls autoplay></audio></div>`;
+          // Audio slides don't have a visual, so we can remove src to prevent PhotoSwipe from trying to load it as an image.
+          delete item.src;
+          break;
+      }
+
+      return item;
+    });
+    lightboxRef.current?.loadAndOpen(images.indexOf(image), dataSource);
   };
 
   if (!images) {
     return null;
   }
 
-  const layoutProps = {
-    images,
-    containerWidth: width,
-    windowWidth,
-    containerRef,
-    onLoadMore,
-    onImageClick: handleImageClick,
-    loadAll,
-  };
-
   return (
     <div ref={containerRef} className="relative min-h-screen w-full">
       {layout === "masonry" ? (
-        <MasonryLayout {...layoutProps} />
+        <MasonryLayout
+          images={images}
+          onLoadMore={onLoadMore}
+          onImageClick={handleImageClick}
+          loadAll={loadAll}
+        />
       ) : (
-        <ResponsiveLayout {...layoutProps} />
+        <ResponsiveLayout
+          images={images}
+          onLoadMore={onLoadMore}
+          onImageClick={handleImageClick}
+          loadAll={loadAll}
+          containerWidth={containerWidth}
+          windowWidth={windowWidth}
+          containerRef={containerRef}
+        />
       )}
       {children}
     </div>

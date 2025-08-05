@@ -13,10 +13,10 @@ export interface GalleryImage {
 }
 
 export interface LayoutProps {
-  images: GalleryImage[];
-  containerWidth: number;
-  windowWidth: number;
-  containerRef: React.RefObject<HTMLElement>;
+  images?: GalleryImage[];
+  containerWidth?: number;
+  windowWidth?: number;
+  containerRef?: React.RefObject<HTMLDivElement>;
   onLoadMore: () => void;
   onImageClick?: (image: GalleryImage) => void;
   loadAll?: boolean;

@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import Image from "next/legacy/image";
+import { useEffect } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { MasonryScroller, useInfiniteLoader, usePositioner } from "masonic";
+import MasonryLayoutComponent from "react-masonry-css";
 import { useRecoilValue } from "recoil";
 
+import "../../styles/masonry.css";
+
 import { settingSelector } from "~/states/setting";
-import { GALLERY_LIMIT } from "../_hooks/useGalleryLoader";
 import type { GalleryImage, LayoutProps } from "../types/gallery";
 import ChildFolderCardList from "./ChildFolderCardList";
 import { GalleryBase } from "./GalleryBase";
@@ -19,74 +20,28 @@ interface Props {
   children?: React.ReactNode;
 }
 
-function useMasonryLayout({
-  images,
-  containerWidth,
-  windowWidth,
-  onLoadMore,
-}: LayoutProps) {
-  const columnWidth = windowWidth < 768 ? windowWidth / 3 : 224;
-  const columnGutter = windowWidth < 768 ? 8 : 12;
-
-  // 使用 useRef 来保存上一次的图片数量
-  const prevImagesLengthRef = useRef(0);
-
-  // 使用 useMemo 来缓存已计算的图片高度
-  const processedImages = useMemo(() => {
-    return images?.map((img) => ({
-      ...img,
-      // 保持每个图片的高度计算结果稳定
-      height: (img.height / img.width) * columnWidth,
-    }));
-  }, [images, columnWidth]);
-
-  const positioner = usePositioner(
-    {
-      width: containerWidth,
-      columnGutter,
-      columnWidth,
-    },
-    [processedImages],
-  );
-
-  // 更新图片数量记录
-  useEffect(() => {
-    if (images?.length) {
-      prevImagesLengthRef.current = images.length;
-    }
-  }, [images?.length]);
-
-  const onRender = useInfiniteLoader(onLoadMore, {
-    minimumBatchSize: GALLERY_LIMIT,
-    threshold: 2,
-  });
-
-  const handleRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node) {
-        onRender(0, 1, images || []);
-      }
-    },
-    [onRender, images],
-  );
-
-  return { positioner, handleRef, columnWidth, onRender };
-}
-
 function MasonryLayout(props: LayoutProps) {
-  const { images, onLoadMore, containerRef } = props;
-  const { positioner, handleRef, onRender } = useMasonryLayout({
-    images,
-    containerWidth: props.containerWidth,
-    windowWidth: props.windowWidth,
-    containerRef,
-    onLoadMore,
-  });
+  const { images, onLoadMore, loadAll } = props;
 
   const setting = useRecoilValue(settingSelector);
   const search = useSearchParams();
   //这里拿到当前的文件夹id
   const folderId = search.get("m") ?? "";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadAll) return;
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 300
+      ) {
+        onLoadMore();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [onLoadMore, loadAll]);
 
   // 只在文件夹页面时自动加载更多
   useEffect(() => {
@@ -94,41 +49,33 @@ function MasonryLayout(props: LayoutProps) {
     onLoadMore();
   }, [images, onLoadMore, folderId]);
 
+  const breakpointColumnsObj = {
+    default: 5,
+    1100: 4,
+    700: 3,
+    500: 2,
+  };
+
   if (!images) return <div />;
 
   return (
-    <div>
-      {/* 文件夹导航 */}
+    <div className="space-y-3">
       <div className="mb-4">
         <ChildFolderCardList folderId={folderId} />
       </div>
-      <MasonryScroller
-        positioner={positioner}
-        containerRef={containerRef}
-        items={images}
-        height={800}
-        overscanBy={2}
-        onRender={onRender}
-        render={({ data: image }) => (
+      <MasonryLayoutComponent
+        breakpointCols={breakpointColumnsObj}
+        className="my-masonry-grid"
+        columnClassName="my-masonry-grid_column"
+      >
+        {images.map((image) => (
           <div
             key={image.id}
-            className="relative cursor-pointer"
-            ref={handleRef}
-            data-pswp-type={image.type}
+            className="relative mb-4 cursor-pointer overflow-hidden rounded-box shadow"
             data-pswp-width={image.width}
             data-pswp-height={image.height}
             onClick={() => props.onImageClick?.(image)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                props.onImageClick?.(image);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            style={{
-              backgroundColor: image.bgColor,
-              height: (image.height / image.width) * positioner.columnWidth,
-            }}
+            style={{ backgroundColor: image.bgColor }}
           >
             {setting.showFileName && (
               <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 p-2 text-xs text-white">
@@ -137,15 +84,15 @@ function MasonryLayout(props: LayoutProps) {
             )}
             <Image
               src={image.thumbnailPath}
-              alt=""
-              layout="fill"
-              objectFit="cover"
+              alt={image.src.split("/").pop() ?? ""}
+              width={image.width}
+              height={image.height}
               className="rounded-box"
-              priority={images && images.indexOf(image) < 2}
+              priority={images.indexOf(image) < 10}
             />
           </div>
-        )}
-      />
+        ))}
+      </MasonryLayoutComponent>
     </div>
   );
 }

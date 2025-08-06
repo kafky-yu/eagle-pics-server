@@ -74,7 +74,6 @@ function MasonryLayout(props: LayoutProps) {
             className="relative mb-4 cursor-pointer overflow-hidden rounded-box shadow"
             data-pswp-width={image.width}
             data-pswp-height={image.height}
-            onClick={() => props.onImageClick?.(image)}
             style={{ backgroundColor: image.bgColor }}
           >
             {setting.showFileName && (
@@ -88,6 +87,7 @@ function MasonryLayout(props: LayoutProps) {
               width={image.width}
               height={image.height}
               className="rounded-box"
+              onClick={() => props.onImageClick?.(image)}
               priority={images.indexOf(image) < 10}
             />
           </div>

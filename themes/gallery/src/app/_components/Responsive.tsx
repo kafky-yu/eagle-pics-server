@@ -100,7 +100,6 @@ function ResponsiveLayout(props: LayoutProps) {
               }}
               data-pswp-width={image.width}
               data-pswp-height={image.height}
-              onClick={() => onImageClick?.(image)}
             >
               {setting.showFileName && (
                 <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 p-2 text-xs text-white">
@@ -109,6 +108,7 @@ function ResponsiveLayout(props: LayoutProps) {
               )}
               <Image
                 src={image.thumbnailPath}
+                onClick={() => onImageClick?.(image)}
                 layout="fill"
                 alt={image.src.split("/").pop() ?? ""}
               />

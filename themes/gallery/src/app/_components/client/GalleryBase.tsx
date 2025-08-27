@@ -59,13 +59,13 @@ export function ClientGalleryBase({
       switch (image.type) {
         case "video":
           // For video slides, PhotoSwipe requires an `html` property that contains the video tag.
-          item.html = `<div class="pswp__video-container"><video src="${image.src}" class="pswp__video" controls autoplay loop></video></div>`;
+          item.html = `<div class="pswp__video-container"><video src="${image.src}" class="pswp__video" controls loop></video></div>`;
           // `src` is not used for video slides, but it's good to keep it for consistency or fallbacks.
           delete item.src;
           break;
         case "audio":
           // For audio slides, we provide an `html` property with an audio tag.
-          item.html = `<div class="pswp__audio-container" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;"><audio src="${image.src}" controls autoplay></audio></div>`;
+          item.html = `<div class="pswp__audio-container" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;"><audio src="${image.src}" controls></audio></div>`;
           // Audio slides don't have a visual, so we can remove src to prevent PhotoSwipe from trying to load it as an image.
           delete item.src;
           break;

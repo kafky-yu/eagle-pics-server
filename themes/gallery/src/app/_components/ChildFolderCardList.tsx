@@ -54,7 +54,12 @@ const ChildFolderCardList = ({ folderId }: { folderId: string }) => {
                   {child.name}
                 </p>
                 <p className="mt-1 text-xs text-base-content/70">
-                  {child.count ? `${child.count} 个文件` : "查看子文件夹"}
+                  {child.children.length
+                    ? `子文件夹数：${child.children.length}`
+                    : ""}
+                </p>
+                <p className="mt-1 text-xs text-base-content/70">
+                  {child.count ? `总文件数：${child.count}` : ""}
                 </p>
               </div>
 

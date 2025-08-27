@@ -92,7 +92,7 @@ export const eagle = t.router({
   getFolderInfo: t.procedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      const { folders } = await eagleService.getLibraryInfo();
+      const folders = await eagleService.getFolders();
       const dbFolders: {
         id: string;
         name: string;
@@ -249,7 +249,7 @@ export const eagle = t.router({
     }),
 
   createFolders: t.procedure.mutation(async () => {
-    const { folders } = await eagleService.getLibraryInfo();
+    const folders = await eagleService.getFolders();
 
     // 获取数据库中所有的文件夹
     const existingFolders = await prisma.folder.findMany();

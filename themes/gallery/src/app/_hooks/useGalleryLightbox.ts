@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useSetRecoilState } from "recoil";
-import { lightboxOpenState } from "~/states/lightbox";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { useSetRecoilState } from "recoil";
 
+import { lightboxOpenState } from "~/states/lightbox";
 import { getFullscreenAPI, getFullscreenPromise } from "~/utils/fullscreen";
 import initLightboxAudioPlugin from "~/utils/photoswipe-audio";
 import initLightboxVideoPlugin from "~/utils/photoswipe-video";
@@ -109,6 +109,20 @@ export function useGalleryLightbox() {
 
     lightbox.on("change", () => {
       setCurrentImageIndex(lightbox.pswp?.currIndex ?? null);
+    });
+
+    lightbox.on("slideDeactivate", (e) => {
+      const { slide } = e;
+      if (slide.content?.element) {
+        const video = slide.content.element.querySelector("video");
+        if (video) {
+          video.pause();
+        }
+        const audio = slide.content.element.querySelector("audio");
+        if (audio) {
+          audio.pause();
+        }
+      }
     });
 
     lightbox.on("close", () => {

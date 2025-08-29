@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -24,8 +24,48 @@ import styles from "./index.module.css";
 const Setting = () => {
   const router = useRouter();
   const [setting, setSetting] = useRecoilState(settingSelector);
-  const [isLibraryListOpen, setIsLibraryListOpen] = React.useState(false);
+  const [isLibraryListOpen, setIsLibraryListOpen] = useState(false);
   const utils = trpc.useUtils();
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const remSize = parseFloat(
+    getComputedStyle(document.documentElement).fontSize,
+  );
+  const initialWidth = Math.min(24 * remSize, 375);
+  const [sidebarWidth, setSidebarWidth] = useState(initialWidth); // 初始宽度
+
+  const startResizing = useCallback((mouseDownEvent: React.MouseEvent) => {
+    mouseDownEvent.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (mouseMoveEvent: MouseEvent) => {
+      if (isResizing && sidebarRef.current) {
+        const newWidth = mouseMoveEvent.clientX;
+        // 设置最小和最大宽度
+        const maxWidth = Math.min((window.innerWidth * 4) / 5, 800);
+        if (newWidth > 300 && newWidth < maxWidth) {
+          setSidebarWidth(newWidth);
+        }
+      }
+    },
+    [isResizing],
+  );
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
 
   const search = useSearchParams();
 
@@ -36,7 +76,7 @@ const Setting = () => {
   const switchLibrary = trpc.eagle.switchLibrary.useMutation();
 
   // 更新图片计数
-  React.useEffect(() => {
+  useEffect(() => {
     if (folders) {
       // 计算第一层文件夹的 count 总和
       const totalCount = folders.reduce(
@@ -52,7 +92,7 @@ const Setting = () => {
 
   const { data: config } = trpc.config.findUnique.useQuery();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (libraries) {
       const activeLib = libraries.find((lib) => lib.isActive);
       if (activeLib) {
@@ -64,7 +104,6 @@ const Setting = () => {
       }
     }
   }, [libraries, setSetting]);
-  const { data: folderTree } = trpc.eagle.getFolders.useQuery();
 
   const handleLayoutChange = (layout: SettingType["layout"]) => {
     setSetting((prev) => ({
@@ -100,13 +139,17 @@ const Setting = () => {
             <AdjustmentsHorizontalIcon className="h-6 w-6" />
           </label>
         </div>
-        <div className="drawer-side z-50">
+        <div className="drawer-side z-50 flex flex-row">
           <label
             htmlFor="my-drawer"
             aria-label="close sidebar"
             className={`${styles.drawerOverlay}`}
           ></label>
-          <div className="min-h-full w-80 bg-base-100 p-4 md:w-96">
+          <div
+            ref={sidebarRef}
+            className="min-h-full bg-base-100 p-4"
+            style={{ width: `${sidebarWidth}px` }}
+          >
             {/* 储存库列表 */}
             <div className="mb-4 rounded-box border border-base-content/10 bg-base-200/30 px-4 py-3">
               <div
@@ -313,10 +356,16 @@ const Setting = () => {
               </ul>
             </div>
 
-            <div className="relative mt-4 rounded-box border border-base-content/10 bg-base-200/30">
-              {folderTree && <FolderTree data={folderTree} />}
+            <div className="relative mt-4 h-full flex-1 rounded-box border border-base-content/10 bg-base-200/30">
+              {folders && <FolderTree data={folders} />}
             </div>
           </div>
+          <div
+            className="fixed bottom-0 top-0 w-1.5 cursor-col-resize select-none bg-transparent transition-colors hover:bg-primary/20"
+            style={{ left: `${sidebarWidth}px` }}
+            onMouseDown={startResizing}
+            aria-hidden="true"
+          />
         </div>
       </div>
     </>

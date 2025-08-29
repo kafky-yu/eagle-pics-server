@@ -142,14 +142,15 @@ export const eagle = t.router({
       count: number;
     }[] = await prisma.folder.findMany();
 
+    const addCount = (folder: EagleFolder) => {
+      folder.count = dbFolders.find((f) => f.id === folder.id)?.count ?? 0;
+      folder.children?.map(addCount);
+    };
+
     // 合并 Eagle 和数据库的文件夹信息
-    return eagleFolders.map((folder): EagleFolder & { count: number } => {
-      const dbFolder = dbFolders.find((f) => f.id === folder.id);
-      return {
-        ...folder,
-        count: dbFolder?.count ?? 0,
-        coverId: folder.coverId ?? dbFolder?.coverId ?? undefined,
-      };
+    return eagleFolders.map((folder) => {
+      addCount(folder);
+      return folder;
     });
   }),
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { GalleryImage } from "~/app/types/gallery";
+import type { GalleryImage } from "~/components/gallery/types/gallery";
 
 export const GALLERY_LIMIT = 30;
 

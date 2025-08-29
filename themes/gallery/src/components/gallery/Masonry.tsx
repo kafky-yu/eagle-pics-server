@@ -6,10 +6,10 @@ import { useSearchParams } from "next/navigation";
 import MasonryLayoutComponent from "react-masonry-css";
 import { useRecoilValue } from "recoil";
 
-import "../../styles/masonry.css";
+import "~/styles/masonry.css";
 
 import { settingSelector } from "~/states/setting";
-import type { GalleryImage, LayoutProps } from "../types/gallery";
+import type { GalleryImage, LayoutProps } from "./types/gallery";
 import ChildFolderCardList from "./ChildFolderCardList";
 import { GalleryBase } from "./GalleryBase";
 

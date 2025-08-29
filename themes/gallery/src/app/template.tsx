@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 
-import { trpc } from "@rao-pics/trpc";
-
-import Setting from "./_components/Setting";
+import Setting from "~/components/Setting";
+import { trpc } from "~/utils/trpc";
 
 export default function Template({ children }: { children: React.ReactNode }) {
   // const { data: lib } = trpc.library.findUnique.useQuery();

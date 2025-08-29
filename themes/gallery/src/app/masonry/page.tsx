@@ -1,8 +1,8 @@
 "use client";
 
 import "photoswipe/style.css";
-import { Masonry } from "../_components/Masonry";
-import { useGalleryImages } from "../_hooks/useGalleryImages";
+import { Masonry } from "~/components/gallery/Masonry";
+import { useGalleryImages } from "~/hooks/useGalleryImages";
 
 export default function MasonryGallery() {
   const { images, onLoadMore, loadAll } = useGalleryImages();

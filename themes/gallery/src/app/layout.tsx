@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import {
   RecoilRootWrapper,
   TRPCReactProviderWrapper,
-} from "./_components/LayoutWrapper";
+} from "~/components/LayoutWrapper";
 
 export const metadata: Metadata = {
   title: "Gallery",

@@ -1,14 +1,16 @@
+"use client";
+
 import "photoswipe/style.css";
 
 import { useEffect, useRef, useState } from "react";
 import type { DataSourceArray } from "photoswipe";
 
-import type { GalleryImage } from "~/app/types/gallery";
+import type { GalleryImage } from "./types/gallery";
 import { useWindowSize } from "~/hooks/useWindowSize";
-import { useGalleryLightbox } from "../../_hooks/useGalleryLightbox";
-import { useGalleryLoader } from "../../_hooks/useGalleryLoader";
-import { MasonryLayout } from "../Masonry";
-import { ResponsiveLayout } from "../Responsive";
+import { useGalleryLightbox } from "~/hooks/useGalleryLightbox";
+import { useGalleryLoader } from "~/hooks/useGalleryLoader";
+import { MasonryLayout } from "./Masonry";
+import { ResponsiveLayout } from "./Responsive";
 
 export interface GalleryBaseProps {
   images?: GalleryImage[];
@@ -25,7 +27,7 @@ export const ImageSkeleton = () => (
   />
 );
 
-export function ClientGalleryBase({
+export function GalleryBase({
   images,
   onLoadMore,
   loadAll = false,

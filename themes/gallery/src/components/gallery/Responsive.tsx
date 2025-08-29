@@ -8,7 +8,7 @@ import { useRecoilValue } from "recoil";
 import useResizeObserver from "use-resize-observer";
 
 import { settingSelector } from "~/states/setting";
-import type { GalleryImage, LayoutProps } from "../types/gallery";
+import type { GalleryImage, LayoutProps } from "./types/gallery";
 import ChildFolderCardList from "./ChildFolderCardList";
 import { GalleryBase } from "./GalleryBase"; // 更新 GalleryBase 的导入路径
 

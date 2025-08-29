@@ -2,8 +2,8 @@
 
 import "photoswipe/style.css";
 
-import { Responsive } from "../_components/Responsive";
-import { useGalleryImages } from "../_hooks/useGalleryImages";
+import { Responsive } from "~/components/gallery/Responsive";
+import { useGalleryImages } from "~/hooks/useGalleryImages";
 
 export default function ResponsiveGallery() {
   const { images, onLoadMore, loadAll } = useGalleryImages();

@@ -4,8 +4,8 @@ import { useSetRecoilState } from "recoil";
 
 import { lightboxOpenState } from "~/states/lightbox";
 import { getFullscreenAPI, getFullscreenPromise } from "~/utils/fullscreen";
-import initLightboxAudioPlugin from "~/utils/photoswipe-audio";
-import initLightboxVideoPlugin from "~/utils/photoswipe-video";
+import initLightboxAudioPlugin from "~/utils/photoswipe/photoswipe-audio";
+import initLightboxVideoPlugin from "~/utils/photoswipe/photoswipe-video";
 
 export function useGalleryLightbox() {
   const setLightboxOpen = useSetRecoilState(lightboxOpenState);

@@ -69,7 +69,11 @@ export function useGalleryImages() {
           width: image.width,
           height: image.height,
           ext: image.ext as unknown as typeof EXT,
-          type: VIDEO_EXT.includes(image.ext) ? "video" : AUDIO_EXT.includes(image.ext) ? "audio" : "image",
+          type: VIDEO_EXT.includes(image.ext)
+            ? "video"
+            : AUDIO_EXT.includes(image.ext)
+              ? "audio"
+              : "image",
           modificationTime: image.modificationTime,
         });
       });

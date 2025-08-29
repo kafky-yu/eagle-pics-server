@@ -1,6 +1,6 @@
 "use client";
 
-import Error from "./_components/Error";
+import Error from "~/components/ui/Error";
 
 export default function NotFound() {
   return (

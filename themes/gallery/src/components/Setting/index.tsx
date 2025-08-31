@@ -32,7 +32,8 @@ const Setting = () => {
   const remSize = parseFloat(
     getComputedStyle(document.documentElement).fontSize,
   );
-  const initialWidth = Math.min(24 * remSize, 375);
+  const isMobile = window.innerWidth < 768;
+  const initialWidth = Math.min(isMobile ? 20 * remSize : 24 * remSize, 375);
   const [sidebarWidth, setSidebarWidth] = useState(initialWidth); // 初始宽度
 
   const startResizing = useCallback((mouseDownEvent: React.MouseEvent) => {
